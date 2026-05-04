@@ -1,0 +1,98 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Check if the user is authenticated
+    function isAuthenticated() {
+       return request.auth != null;
+    }
+
+    // Check if user owns the resource (for user-owned documents)
+    function isOwner(userId) {
+       return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if user is admin
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "yao_pengcheng@outlook.com" ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    // Validate email format
+    function isValidEmail(email) {
+       return email is string && email.matches("^[^@]+@[^@]+\\.[^@]+$");
+    }
+
+    // Validate Registration Request
+    function isValidRegistrationRequest(data) {
+      return data.keys().hasAll(['email', 'status', 'createdAt']) &&
+             isValidEmail(data.email) &&
+             data.status in ['pending', 'approved', 'rejected', 'used'] &&
+             data.createdAt is timestamp;
+    }
+
+    // Validate User
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'role', 'createdAt']) &&
+             isValidEmail(data.email) &&
+             data.role in ['admin', 'user'] &&
+             data.createdAt is timestamp &&
+             (!('customStocks' in data) || (data.customStocks is list && data.customStocks.size() <= 50)) &&
+             (!('customSites' in data) || (data.customSites is list && data.customSites.size() <= 20)) &&
+             (!('customTopics' in data) || (data.customTopics is list && data.customTopics.size() <= 20));
+    }
+
+    match /registration_requests/{requestId} {
+      // Anyone can create a pending request with their email
+      allow create: if isValidRegistrationRequest(request.resource.data) &&
+                       request.resource.data.status == 'pending' &&
+                       (!('registrationCode' in request.resource.data));
+      
+      // Admin can read all requests.
+      allow read: if isAdmin();
+      
+      // Admin can update to approve/reject and set code.
+      // Unauthenticated user can update status to 'used' when they register, but ONLY if they provide the correct code.
+      // Also allow unauthenticated user to re-submit a pending request (which acts as an update).
+      allow update: if (isAdmin() && isValidRegistrationRequest(request.resource.data)) ||
+                       (
+                         request.resource.data.status == 'used' && 
+                         resource.data.status == 'approved' && 
+                         request.resource.data.email == resource.data.email &&
+                         request.resource.data.registrationCode == resource.data.registrationCode
+                       ) ||
+                       (
+                         request.resource.data.status == 'pending' &&
+                         resource.data.status == 'pending' &&
+                         request.resource.data.email == resource.data.email &&
+                         (!('registrationCode' in request.resource.data))
+                       );
+                       
+      // Admin can delete requests
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      // Users can read their own profile, admins can read all
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Users can create their own profile upon registration, but role must be 'user' unless admin creates it
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) &&
+                       (request.resource.data.role == 'user' || isAdmin());
+      
+      // Admin can update anything. Users can update their own preferences but cannot change email, role, or createdAt.
+      allow update: if (isAdmin() && isValidUser(request.resource.data)) ||
+                       (isOwner(userId) && isValidUser(request.resource.data) &&
+                        request.resource.data.email == resource.data.email &&
+                        request.resource.data.role == resource.data.role &&
+                        request.resource.data.createdAt == resource.data.createdAt);
+    }
+    match /mail/{mailId} {
+      // Admin can create emails to be sent
+      allow create: if isAdmin();
+      allow read: if isAdmin();
+    }
+  }
+}

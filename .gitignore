@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment variables (contain API keys)
+.env
+.env.local
+.env.*.local
+
+# Firebase config with API keys (use firebase-applet-config.example.json instead)
+# firebase-applet-config.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Vite
+.vite/
+
+# Misc
+*.local
+*.log

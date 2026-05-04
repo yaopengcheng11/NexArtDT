@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DailyTrend NexArt" />
+    
+    <!-- 专属定制的 SVG Logo：黑底色圆角矩形 + 渐变薄荷绿的 N 字标 -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2342d392'/%3E%3Cstop offset='100%25' stop-color='%232a8b58'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='120' height='120' rx='28' fill='%230a0a0a'/%3E%3Cpath d='M35 85 L35 35 L85 85 L85 35' fill='none' stroke='url(%23g)' stroke-width='14' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+    
+    <title>DailyTrend NexArt</title>
+  </head>
+  <body style="margin: 0; background-color: #0a0a0a;">
+    <div id="root">
+      <!-- 这个是在网络慢的时候，React连JS代码都没拉取下来之前的纯后备动画，平时可能一闪而过 -->
+      <style>
+        .initial-loader {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          width: 100vw;
+          background-color: #0a0a0a;
+          margin: 0;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .loader-logo {
+          font-size: 1.5rem;
+          font-weight: 900;
+          color: #42d392;
+          letter-spacing: 2px;
+          display: flex;
+        }
+        .loader-logo span {
+          opacity: 0;
+          display: inline-block;
+          animation: wetaReveal 2.5s infinite;
+        }
+        .loader-logo span.dt {
+          font-weight: 300;
+          color: #2a8b58;
+        }
+        .loader-logo span.dt:first-of-type {
+          margin-left: 6px;
+        }
+        @keyframes wetaReveal {
+          0% { opacity: 0; filter: blur(4px); transform: translateX(-2px); }
+          15%, 80% { opacity: 1; filter: blur(0); transform: translateX(0); text-shadow: 0 0 10px rgba(66, 211, 146, 0.4); }
+          100% { opacity: 0; filter: blur(2px); transform: translateX(2px); }
+        }
+      </style>
+      <div class="initial-loader">
+        <div class="loader-logo">
+          <span style="animation-delay: 0.0s">N</span>
+          <span style="animation-delay: 0.1s">e</span>
+          <span style="animation-delay: 0.2s">x</span>
+          <span style="animation-delay: 0.3s">A</span>
+          <span style="animation-delay: 0.4s">r</span>
+          <span style="animation-delay: 0.5s">t</span>
+          <span class="dt" style="animation-delay: 0.6s">D</span>
+          <span class="dt" style="animation-delay: 0.7s">T</span>
+        </div>
+      </div>
+    </div>
+    
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

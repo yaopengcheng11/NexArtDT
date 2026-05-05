@@ -140,7 +140,7 @@ async function fetchMarketContext(customStocks = [], moduleName = "") {
 }
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT || 3005;
+  const PORT = Number(process.env.PORT || 3005);
   app.use(express.json());
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });

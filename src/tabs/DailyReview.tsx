@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Gavel, Eye, Edit, Plus, X, Check, Upload, FileText, Loader2 } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import type { DailyReviewData } from '../context/DataContext';
 import { getStockColor, getOpinionColor, getOpinionBgColor, cn } from '../lib/utils';
 import { analyzeAnnouncementPDF } from '../lib/gemini';
 import { announcementAnalysisSchema } from '../lib/schemas';
@@ -9,9 +10,15 @@ export function DailyReview() {
   const { dailyReview, customStocks, setCustomStocks, updateData } = useData();
 
   // 💥 核心修复：添加默认空对象和数组，防止缓存数据异常导致读取 undefined
-  const marketOverview = dailyReview?.marketOverview || {};
-  const stocks = dailyReview?.stocks || [];
-  const announcements = dailyReview?.announcements || [];
+  const marketOverview: DailyReviewData['marketOverview'] = dailyReview?.marketOverview || {
+    indexValue: '',
+    indexChange: '',
+    summary: '',
+    volume: '',
+    mainFlow: '',
+  };
+  const stocks: DailyReviewData['stocks'] = dailyReview?.stocks || [];
+  const announcements: DailyReviewData['announcements'] = dailyReview?.announcements || [];
 
   const [isEditingStocks, setIsEditingStocks] = useState(false);
   const [newStock, setNewStock] = useState('');

@@ -3,10 +3,11 @@ import { useData } from '../context/DataContext';
 
 export function FinanceNews() {
   const { financeNews } = useData();
+  const newsList = Array.isArray(financeNews?.news) ? financeNews.news : [];
 
   return (
     <div className="flex flex-col gap-4 max-w-2xl mx-auto pt-16 pb-20 px-4">
-      {financeNews.news.map((news, index) => (
+      {newsList.map((news, index) => (
         <article key={index} className="bg-surface-container rounded-xl overflow-hidden shadow-sm relative">
           {index === 1 && <div className="absolute left-0 top-4 bottom-4 w-0.5 bg-primary rounded-full"></div>}
           <div className="p-4">
@@ -73,6 +74,12 @@ export function FinanceNews() {
           </div>
         </article>
       ))}
+
+      {newsList.length === 0 && (
+        <div className="bg-surface-container rounded-xl p-6 text-center text-sm text-on-surface-variant">
+          暂无财经要闻数据，点击顶部刷新后会重新拉取内容。
+        </div>
+      )}
     </div>
   );
 }

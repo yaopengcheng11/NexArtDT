@@ -59,57 +59,65 @@ function MainApp() {
     }
   }, [loading]);
 
+  const refreshConfigs = [
+    {
+      moduleName: '热搜早知道',
+      contextKey: 'hotSearch',
+      schema: hotSearchSchema,
+      getExtraPrompt: () => `请获取以下网站的热搜数据：${customSites.join(', ')}。每个网站至少提供 5 条热点内容。${
+        customTopics.length > 0 ? `用户特别关注以下话题：${customTopics.join(', ')}，请尽量包含相关内容。` : ''
+      }`,
+    },
+    {
+      moduleName: '每日复盘',
+      contextKey: 'dailyReview',
+      schema: dailyReviewSchema,
+      getExtraPrompt: () => `请重点复盘以下自选股：${customStocks.join(', ')}。`,
+    },
+    {
+      moduleName: '财经要闻',
+      contextKey: 'financeNews',
+      schema: financeNewsSchema,
+      getExtraPrompt: () => '',
+    },
+    {
+      moduleName: '全球冲突进程',
+      contextKey: 'globalConflict',
+      schema: globalConflictSchema,
+      getExtraPrompt: () => '',
+    },
+    {
+      moduleName: '未来预判',
+      contextKey: 'futureForecast',
+      schema: futureForecastSchema,
+      getExtraPrompt: () => '',
+    },
+  ] as const;
+
   const handleRefresh = async () => {
-    let moduleName = '';
-    let schema: object | null = null;
-    let contextKey = '';
-    let extraPrompt = '';
-
-    switch (activeTab) {
-      case 'hot':
-        moduleName = '热搜早知道';
-        schema = hotSearchSchema;
-        contextKey = 'hotSearch';
-        extraPrompt = `请获取以下网站的热搜数据：${customSites.join(', ')}。每个网站至少提供 5 条热点内容。${
-          customTopics.length > 0 ? `用户特别关注以下话题：${customTopics.join(', ')}，请尽量包含相关内容。` : ''
-        }`;
-        break;
-      case 'review':
-        moduleName = '每日复盘';
-        schema = dailyReviewSchema;
-        contextKey = 'dailyReview';
-        extraPrompt = `请重点复盘以下自选股：${customStocks.join(', ')}。`;
-        break;
-      case 'finance':
-        moduleName = '财经要闻';
-        schema = financeNewsSchema;
-        contextKey = 'financeNews';
-        break;
-      case 'conflict':
-        moduleName = '全球冲突进程';
-        schema = globalConflictSchema;
-        contextKey = 'globalConflict';
-        break;
-      case 'forecast':
-        moduleName = '未来预判';
-        schema = futureForecastSchema;
-        contextKey = 'futureForecast';
-        break;
-      default:
-        return;
-    }
-
-    if (!moduleName || !schema) return;
-
-    setIsRefreshing(contextKey, true);
+    refreshConfigs.forEach(({ contextKey }) => setIsRefreshing(contextKey, true));
     try {
-      const newData = await fetchLatestData(moduleName, schema, extraPrompt, globalModel, customStocks);
-      updateData(contextKey, newData);
+      const results = await Promise.allSettled(
+        refreshConfigs.map(async ({ moduleName, contextKey, schema, getExtraPrompt }) => {
+          const newData = await fetchLatestData(moduleName, schema, getExtraPrompt(), globalModel, customStocks);
+          updateData(contextKey, newData);
+          return contextKey;
+        })
+      );
+
+      const failedModules = results
+        .map((result, index) => ({ result, config: refreshConfigs[index] }))
+        .filter(({ result }) => result.status === 'rejected')
+        .map(({ config }) => config.moduleName);
+
+      if (failedModules.length > 0) {
+        alert(`以下模块更新失败：${failedModules.join('、')}。其余模块已尽量更新。`);
+      }
     } catch (error) {
       console.error('Refresh failed', error);
       alert('更新失败，请稍后再试');
     } finally {
-      setIsRefreshing(contextKey, false);
+      refreshConfigs.forEach(({ contextKey }) => setIsRefreshing(contextKey, false));
     }
   };
 

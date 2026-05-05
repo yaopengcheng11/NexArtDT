@@ -3,6 +3,10 @@ import { useData } from '../context/DataContext';
 
 export function FutureForecast() {
   const { futureForecast } = useData();
+  const themes = Array.isArray(futureForecast?.themes) ? futureForecast.themes : [];
+  const avoidSectors = futureForecast?.avoidSectors ?? { tags: [], reason: '' };
+  const events = Array.isArray(futureForecast?.events) ? futureForecast.events : [];
+  const strategy = futureForecast?.strategy ?? { position: '', positionDesc: '', attack: '', defense: '', view: '' };
 
   return (
     <div className="pt-16 pb-20 px-4 space-y-4 max-w-5xl mx-auto">
@@ -25,7 +29,7 @@ export function FutureForecast() {
 
       {/* Trending Themes Bento Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {futureForecast.themes.map((theme, index) => (
+        {themes.map((theme, index) => (
           <div key={index} className="bg-surface-container rounded-xl overflow-hidden flex flex-col hover:shadow-2xl hover:shadow-secondary/5 transition-all duration-300">
             <div className="p-4 space-y-3 flex-grow">
               <div className="flex justify-between items-start mb-1">
@@ -63,6 +67,12 @@ export function FutureForecast() {
         ))}
       </div>
 
+      {themes.length === 0 && (
+        <div className="bg-surface-container rounded-xl p-6 text-center text-sm text-on-surface-variant">
+          暂无未来预判数据，点击顶部刷新后会重新拉取内容。
+        </div>
+      )}
+
       {/* Risk Warning & Events */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Sectors to Avoid */}
@@ -72,12 +82,12 @@ export function FutureForecast() {
             <h3 className="font-headline font-bold text-sm text-green-500">回避板块</h3>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {futureForecast.avoidSectors.tags.map((sector, index) => (
+            {(Array.isArray(avoidSectors.tags) ? avoidSectors.tags : []).map((sector, index) => (
               <span key={index} className="bg-green-500/20 px-2 py-1 rounded-md text-green-500 text-[11px] font-semibold border border-green-500/20">{sector}</span>
             ))}
           </div>
           <p className="mt-3 text-[9px] text-on-surface-variant leading-relaxed">
-            {futureForecast.avoidSectors.reason}
+            {avoidSectors.reason}
           </p>
         </div>
 
@@ -88,7 +98,7 @@ export function FutureForecast() {
             <h3 className="font-headline font-bold text-sm text-primary">重点事件观察</h3>
           </div>
           <ul className="space-y-2">
-            {futureForecast.events.map((event, index) => (
+            {events.map((event, index) => (
               <li key={index} className="flex items-center justify-between text-[11px]">
                 <span className="text-on-surface">{event.name}</span>
                 <span className="text-[9px] bg-primary-container px-1.5 py-0.5 rounded text-primary">{event.time}</span>
@@ -109,24 +119,24 @@ export function FutureForecast() {
           <div className="space-y-0.5">
             <p className="text-[9px] uppercase font-bold tracking-widest text-on-primary-container">总体仓位</p>
             <div className="flex items-end gap-1.5">
-              <span className="text-xl font-black text-red-500">{futureForecast.strategy.position}</span>
-              <span className="text-[9px] mb-0.5 text-on-surface-variant">{futureForecast.strategy.positionDesc}</span>
+              <span className="text-xl font-black text-red-500">{strategy.position}</span>
+              <span className="text-[9px] mb-0.5 text-on-surface-variant">{strategy.positionDesc}</span>
             </div>
           </div>
           <div className="space-y-0.5">
             <p className="text-[9px] uppercase font-bold tracking-widest text-on-primary-container">进攻组合</p>
-            <p className="text-on-surface text-xs font-semibold">{futureForecast.strategy.attack}</p>
+            <p className="text-on-surface text-xs font-semibold">{strategy.attack}</p>
           </div>
           <div className="space-y-0.5">
             <p className="text-[9px] uppercase font-bold tracking-widest text-on-primary-container">防守组合</p>
-            <p className="text-on-surface text-xs font-semibold">{futureForecast.strategy.defense}</p>
+            <p className="text-on-surface text-xs font-semibold">{strategy.defense}</p>
           </div>
         </div>
 
         <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/10">
           <p className="text-[9px] uppercase font-bold tracking-widest text-on-primary-container mb-2">核心观点</p>
           <p className="text-on-surface leading-loose text-[11px] italic">
-            “{futureForecast.strategy.view}”
+            “{strategy.view}”
           </p>
         </div>
       </section>

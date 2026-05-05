@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useAuth } from './AuthContext';
 import { db } from '../lib/firebase';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { normalizeModuleData } from '../lib/gemini';
 
 export interface HotSearchData { sites: { siteName: string; items: { title: string; hotness: string; desc: string; analysis: string; }[]; }[]; }
 export interface AnnouncementAnalysis { summary: string; opinion: string; reason: string; conclusion: string; }
@@ -34,7 +35,23 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 const getLocalData = (key: string, fallback: any) => {
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : fallback;
+    if (!item) return fallback;
+
+    const parsed = JSON.parse(item);
+    switch (key) {
+      case 'dt_hotSearch':
+        return normalizeModuleData('hotSearch', parsed);
+      case 'dt_dailyReview':
+        return normalizeModuleData('dailyReview', parsed);
+      case 'dt_financeNews':
+        return normalizeModuleData('financeNews', parsed);
+      case 'dt_globalConflict':
+        return normalizeModuleData('globalConflict', parsed);
+      case 'dt_futureForecast':
+        return normalizeModuleData('futureForecast', parsed);
+      default:
+        return parsed;
+    }
   } catch {
     return fallback;
   }
@@ -103,11 +120,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [lastUpdated, setLastUpdated] = useState<Record<string, string>>(() => getLocalData('dt_lastUpdated', {}));
 
   const updateData = (module: string, data: any) => {
+    const normalizedData = normalizeModuleData(module, data);
     const updateTime = new Date();
     const formattedTime = `${updateTime.getFullYear()}年${updateTime.getMonth() + 1}月${updateTime.getDate()}日 ${String(updateTime.getHours()).padStart(2, '0')}:${String(updateTime.getMinutes()).padStart(2, '0')}:${String(updateTime.getSeconds()).padStart(2, '0')}`;
 
     // 💥 核心修改：生成完毕后，立刻存入 LocalStorage 进行固化
-    localStorage.setItem(`dt_${module}`, JSON.stringify(data));
+    localStorage.setItem(`dt_${module}`, JSON.stringify(normalizedData));
 
     setLastUpdated(prev => {
       const newTimes = { ...prev, [module]: formattedTime };
@@ -116,11 +134,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
 
     switch (module) {
-      case 'hotSearch': setHotSearch(data); break;
-      case 'dailyReview': setDailyReview(data); break;
-      case 'financeNews': setFinanceNews(data); break;
-      case 'globalConflict': setGlobalConflict(data); break;
-      case 'futureForecast': setFutureForecast(data); break;
+      case 'hotSearch': setHotSearch(normalizedData); break;
+      case 'dailyReview': setDailyReview(normalizedData); break;
+      case 'financeNews': setFinanceNews(normalizedData); break;
+      case 'globalConflict': setGlobalConflict(normalizedData); break;
+      case 'futureForecast': setFutureForecast(normalizedData); break;
     }
   };
 

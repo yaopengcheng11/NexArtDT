@@ -4,10 +4,11 @@ import { getStockColor } from '../lib/utils';
 
 export function GlobalConflict() {
   const { globalConflict } = useData();
+  const conflicts = Array.isArray(globalConflict?.conflicts) ? globalConflict.conflicts : [];
 
   return (
     <div className="pt-16 pb-20 px-4 space-y-4 max-w-2xl mx-auto">
-      {globalConflict.conflicts.map((conflict, index) => (
+      {conflicts.map((conflict, index) => (
         <section key={index} className="bg-surface-container rounded-xl overflow-hidden shadow-2xl relative">
           {index === 0 && <div className="h-1 bg-gradient-to-r from-secondary to-transparent w-full"></div>}
           <div className="p-4 space-y-3">
@@ -43,7 +44,7 @@ export function GlobalConflict() {
                   <span className="text-[9px] font-bold text-tertiary uppercase tracking-wider">影响</span>
                 </div>
                 <div className="space-y-0.5">
-                  {conflict.impacts.map((impact, i) => (
+                  {(Array.isArray(conflict?.impacts) ? conflict.impacts : []).map((impact, i) => (
                     <div key={i} className="flex justify-between items-center">
                       <span className="text-[9px] text-on-surface-variant">{impact.name}</span>
                       <span className={`text-[9px] font-bold ${getStockColor(impact.change)}`}>{impact.change}</span>
@@ -78,6 +79,12 @@ export function GlobalConflict() {
           </div>
         </section>
       ))}
+
+      {conflicts.length === 0 && (
+        <div className="bg-surface-container rounded-xl p-6 text-center text-sm text-on-surface-variant">
+          暂无全球冲突数据，点击顶部刷新后会重新拉取内容。
+        </div>
+      )}
     </div>
   );
 }

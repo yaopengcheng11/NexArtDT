@@ -9,6 +9,7 @@ export function HotSearch() {
   const { hotSearch, customSites, setCustomSites, customTopics, setCustomTopics } = useData();
   const [isEditing, setIsEditing] = useState(false);
   const [newTopic, setNewTopic] = useState('');
+  const sites = Array.isArray(hotSearch?.sites) ? hotSearch.sites : [];
 
   const toggleSite = (site: string) => {
     if (customSites.includes(site)) {
@@ -115,7 +116,7 @@ export function HotSearch() {
       )}
 
       {/* Dynamic Sites Rendering */}
-      {hotSearch.sites?.map((site, siteIndex) => (
+      {sites.map((site, siteIndex) => (
         <section key={siteIndex} className="space-y-3">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
@@ -125,7 +126,7 @@ export function HotSearch() {
           </div>
 
           <div className="grid gap-3">
-            {site.items.map((item, itemIndex) => (
+            {(Array.isArray(site?.items) ? site.items : []).map((item, itemIndex) => (
               <div key={itemIndex} className="bg-surface-container rounded-xl overflow-hidden relative group transition-all duration-300 hover:bg-surface-container-high border-l-2 border-outline-variant/20 hover:border-primary">
                 <div className="p-4 space-y-3">
                   <div className="flex justify-between items-start gap-3">
@@ -155,6 +156,12 @@ export function HotSearch() {
           </div>
         </section>
       ))}
+
+      {sites.length === 0 && (
+        <div className="bg-surface-container rounded-xl p-6 text-center text-sm text-on-surface-variant">
+          暂无热搜数据，点击顶部刷新后会重新拉取内容。
+        </div>
+      )}
     </div>
   );
 }

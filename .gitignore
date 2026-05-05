@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 build/
+server.js
 
 # Environment variables (contain API keys)
 .env
@@ -16,6 +17,7 @@ build/
 # Logs
 *.log
 npm-debug.log*
+screenshot-*.png
 
 # OS files
 .DS_Store

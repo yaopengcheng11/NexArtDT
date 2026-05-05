@@ -190,7 +190,6 @@ DailyTrendDT/
 │  ├─ main.tsx           # 前端入口
 │  └─ index.css          # 全局样式
 ├─ server.ts             # Express 服务端入口
-├─ server.js             # 构建后的服务端产物
 ├─ firestore.rules       # Firestore 安全规则
 ├─ firebase-applet-config.json
 ├─ package.json
@@ -284,7 +283,7 @@ npm run build
 产物包括：
 
 - 前端静态资源：`dist/`
-- 后端运行文件：`server.js`
+- 后端运行文件：`server.js`（构建时自动生成，不建议手动维护）
 
 ### 生产启动
 
@@ -297,6 +296,7 @@ npm run start
 - 生产环境仍然需要 Node 服务常驻运行
 - 不能只部署 `dist/` 静态文件
 - 如果只部署前端而没有部署 Node 后端，所有 `/api/*` 功能都会失败
+- `npm start` 会先自动执行 `build:server`，再启动 `server.js`
 
 ## 部署说明
 
@@ -420,12 +420,12 @@ const PORT = 3000;
 
 如果未来要部署到云平台，通常建议改为优先读取 `process.env.PORT`。
 
-### 4. `server.ts` 与 `server.js` 同时存在
+### 4. `server.ts` 与 `server.js` 的关系
 
 - `server.ts` 是源码
-- `server.js` 是构建产物
+- `server.js` 是构建时自动生成的运行产物
 
-日常开发应修改 `server.ts`，不要直接改 `server.js`。
+日常开发只需要修改 `server.ts`，不要直接改 `server.js`。
 
 ## 常用命令
 

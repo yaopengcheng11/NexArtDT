@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "cross-env USE_VITE_DEV_SERVER=true tsx server.ts",
+    "prestart": "npm run build:server",
     "start": "node server.js",
     "build:client": "vite build",
     "build:server": "esbuild server.ts --platform=node --format=esm --packages=external --outfile=server.js",

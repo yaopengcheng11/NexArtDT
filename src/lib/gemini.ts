@@ -182,6 +182,7 @@ function transformFinanceNews(data: any) {
       source: String(pickFirst(n.source, n.media, n.publisher, n.来源)),
       time: String(pickFirst(n.time, n.publishTime, n.publish_time, n.时间)),
       title: String(pickFirst(n.title, n.headline, n.标题)),
+      link: String(pickFirst(n.link, n.url, n.href, n.链接, n.链接地址)),
       desc: String(pickFirst(n.desc, n.summary, n.content, n.摘要, n.内容)),
       goodSectors: String(pickFirst(n.good_sectors, n.goodSectors, n.benefitSectors, n.benefit_sectors, n.利好板块)),
       goodStocks: String(pickFirst(n.good_stocks, n.goodStocks, n.benefitStocks, n.benefit_stocks, n.利好个股)),
@@ -202,8 +203,18 @@ function transformHotSearch(data: any) {
       items: ensureArray(site.items || site.list || site.hotspots || site.热点列表).map((item: any) => ({
         title: String(pickFirst(item.title, item.keyword, item.name, item.标题, item.热搜词)),
         hotness: String(pickFirst(item.hotness, item.hot_value, item.hotValue, item.hot, item.score, item.热度)),
+        link: String(pickFirst(item.link, item.url, item.href, item.链接, item.链接地址)),
         desc: String(pickFirst(item.desc, item.description, item.summary, item.摘要, item.描述)),
-        analysis: String(pickFirst(item.analysis, item.comment, item.reason, item.分析, item.观点)),
+        perspectives: Array.isArray(item.perspectives) ? item.perspectives.map((p: any) => ({
+          role: String(pickFirst(p.role, p.视角, p.角色, p.name)),
+          view: String(pickFirst(p.view, p.opinion, p.content, p.观点, p.分析, p.viewpoint)),
+        })) : [
+          // Fallback: if no perspectives, wrap old analysis into a single default perspective
+          ...(item.analysis ? [{
+            role: '综合视角',
+            view: String(pickFirst(item.analysis, item.comment, item.reason, item.分析, item.观点)),
+          }] : []),
+        ],
       })),
     })),
   };
@@ -219,13 +230,43 @@ function transformGlobalConflict(data: any) {
       region: String(pickFirst(conflict.region, conflict.name, conflict.title, conflict.地区, conflict.区域)),
       duration: String(pickFirst(conflict.duration, conflict.phase, conflict.timeRange, conflict.持续时间, conflict.阶段)),
       desc: String(pickFirst(conflict.desc, conflict.summary, conflict.content, conflict.描述, conflict.概述)),
-      analysis: String(pickFirst(conflict.analysis, conflict.comment, conflict.judgment, conflict.分析, conflict.判断)),
+      sideA: {
+        name: String(pickFirst(
+          conflict.sideA?.name, conflict.sideA?.甲方,
+          conflict.partyA, conflict.甲方, conflict.一方, conflict.冲突方A,
+        )),
+        opinion: String(pickFirst(
+          conflict.sideA?.opinion, conflict.sideA?.view, conflict.sideA?.观点,
+          conflict.partyAOpinion, conflict.甲方观点, conflict.一方观点,
+        )),
+        reason: String(pickFirst(
+          conflict.sideA?.reason, conflict.sideA?.argument, conflict.sideA?.理由,
+          conflict.partyAReason, conflict.甲方理由, conflict.一方理由,
+        )),
+      },
+      sideB: {
+        name: String(pickFirst(
+          conflict.sideB?.name, conflict.sideB?.乙方,
+          conflict.partyB, conflict.乙方, conflict.另一方, conflict.冲突方B,
+        )),
+        opinion: String(pickFirst(
+          conflict.sideB?.opinion, conflict.sideB?.view, conflict.sideB?.观点,
+          conflict.partyBOpinion, conflict.乙方观点, conflict.另一方观点,
+        )),
+        reason: String(pickFirst(
+          conflict.sideB?.reason, conflict.sideB?.argument, conflict.sideB?.理由,
+          conflict.partyBReason, conflict.乙方理由, conflict.另一方理由,
+        )),
+      },
+      analysis: String(pickFirst(
+        conflict.objectiveAnalysis, conflict.objective_analysis, conflict.neutralAnalysis,
+        conflict.analysis, conflict.comment, conflict.judgment, conflict.分析, conflict.判断,
+        conflict.客观分析,
+      )),
       impacts: ensureArray(conflict.impacts || conflict.impactList || conflict.影响列表).map((impact: any) => ({
         name: String(pickFirst(impact.name, impact.asset, impact.symbol, impact.名称, impact.资产)),
         change: String(normalizeSignedValue(pickFirst(impact.change, impact.changePercent, impact.change_percent, impact.涨跌幅, impact.变化))),
       })),
-      opinion: String(pickFirst(conflict.opinion, conflict.view, conflict.outlook, conflict.观点)),
-      reason: String(pickFirst(conflict.reason, conflict.logic, conflict.comment, conflict.理由)),
       source: String(pickFirst(conflict.source, conflict.sources, conflict.reference, conflict.来源)),
     })),
   };
@@ -247,6 +288,9 @@ function transformFutureForecast(data: any) {
       event: String(pickFirst(t.event, t.event_desc, t.catalyst, t.催化事件)),
       judgment: String(pickFirst(t.judgment, t.analysis, t.comment, t.板块判断, t.判断)),
       stock: String(pickFirst(t.stock, t.related_stocks, t.relatedStocks, t.pick, t.推荐个股)),
+      reason: String(pickFirst(t.reason, t.logic, t.理由, t.推荐逻辑, t.投资逻辑)),
+      upstream: String(pickFirst(t.upstream, t.上游, t.上游产业, t.upstreamIndustry, t.upstream_industry)),
+      downstream: String(pickFirst(t.downstream, t.下游, t.下游产业, t.downstreamIndustry, t.downstream_industry)),
       holdDays: String(pickFirst(t.hold_days, t.holdDays, t.holdingPeriod, t.holding_period, t.持股天数)),
       buyRange: String(pickFirst(t.buy_range, t.buyRange, t.entryRange, t.entry_range, t.买入区间)),
       target: String(pickFirst(t.target, t.target_price, t.targetPrice, t.止盈目标, t.目标价)),

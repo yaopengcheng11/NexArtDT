@@ -263,10 +263,10 @@ async function startServer() {
     try {
       const marketContext = await fetchMarketContext(customStocks, moduleName);
 
-      // 💥 战事模块“思想钢印”：阻断 AI 返回股票名称
+      // 💥 战事模块"思想钢印"：阻断 AI 返回股票名称 + 要求双立场+客观分析
       let warPromptInjector = '';
       if (moduleName === 'globalConflict') {
-        warPromptInjector = `\n\n【最高指令 (CRITICAL)】：在分析 impacts 时，绝对禁止出现任何中国 A 股个股名称（如茅台、宁德时代等）。你必须分析该事件对全球宏观资产的影响，如：“布伦特原油”、“现货黄金”、“美元指数”、“航运指数”、“军工ETF” 等。`;
+        warPromptInjector = `\n\n【最高指令 (CRITICAL)】：在分析 impacts 时，绝对禁止出现任何中国 A 股个股名称（如茅台、宁德时代等）。你必须分析该事件对全球宏观资产的影响，如："布伦特原油"、"现货黄金"、"美元指数"、"航运指数"、"军工ETF" 等。\n\n【双立场+客观分析要求】：对于每场冲突，必须提供以下三个维度：\n1. sideA（甲方）：包含 name（甲方名称）、opinion（甲方的立场和观点）、reason（甲方的理由和论据）\n2. sideB（乙方）：包含 name（乙方名称）、opinion（乙方的立场和观点）、reason（乙方的理由和论据）\n3. analysis（客观分析）：从第三方中立、客观的角度分析该事件及其对金融市场的影响`;
       }
 
       if (model === 'gemini') {

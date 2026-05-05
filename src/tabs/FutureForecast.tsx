@@ -51,7 +51,7 @@ export function FutureForecast() {
                   <span className="text-[9px] font-bold text-red-500">推荐个股: {theme.stock}</span>
                   <span className="text-[8px] text-on-surface-variant">持股: {theme.holdDays}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 mb-2">
                   <div className="bg-surface-container-low p-1.5 rounded-md">
                     <p className="text-[8px] text-on-primary-container">买入区间</p>
                     <p className="text-[9px] font-bold text-on-surface">{theme.buyRange}</p>
@@ -61,6 +61,30 @@ export function FutureForecast() {
                     <p className="text-[9px] font-bold text-red-500">{theme.target}</p>
                   </div>
                 </div>
+                {/* 推荐理由 */}
+                {theme.reason && (
+                  <div className="bg-primary/5 border border-primary/10 rounded-lg p-2 mb-2">
+                    <p className="text-[8px] font-bold text-primary uppercase tracking-wider mb-1">推荐理由</p>
+                    <p className="text-[9px] text-on-surface leading-relaxed">{theme.reason}</p>
+                  </div>
+                )}
+                {/* 上下游产业链 */}
+                {(theme.upstream || theme.downstream) && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {theme.upstream && (
+                      <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-2">
+                        <p className="text-[7px] font-bold text-yellow-500 uppercase tracking-wider mb-0.5">⬆ 上游产业链</p>
+                        <p className="text-[8px] text-on-surface-variant leading-snug">{theme.upstream}</p>
+                      </div>
+                    )}
+                    {theme.downstream && (
+                      <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-2">
+                        <p className="text-[7px] font-bold text-green-500 uppercase tracking-wider mb-0.5">⬇ 下游产业链</p>
+                        <p className="text-[8px] text-on-surface-variant leading-snug">{theme.downstream}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

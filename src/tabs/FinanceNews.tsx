@@ -1,4 +1,4 @@
-import { MoreHorizontal, Bookmark, TrendingUp, BarChart2, Sparkles } from 'lucide-react';
+import { MoreHorizontal, Bookmark, TrendingUp, BarChart2, Sparkles, ExternalLink } from 'lucide-react';
 import { useData } from '../context/DataContext';
 
 export function FinanceNews() {
@@ -21,6 +21,16 @@ export function FinanceNews() {
                   <p className="text-[11px] font-bold text-on-surface">{news.source}</p>
                   <p className="text-[9px] text-on-surface-variant">{news.time}</p>
                 </div>
+                {news.link && (
+                  <a
+                    href={news.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-auto text-[10px] text-secondary hover:text-secondary/80 flex items-center gap-0.5 transition-colors"
+                  >
+                    <ExternalLink className="w-3 h-3" /> 阅读原文
+                  </a>
+                )}
               </div>
             </div>
 

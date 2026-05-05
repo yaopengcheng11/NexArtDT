@@ -4,12 +4,12 @@ import { db } from '../lib/firebase';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { normalizeModuleData } from '../lib/gemini';
 
-export interface HotSearchData { sites: { siteName: string; items: { title: string; hotness: string; desc: string; analysis: string; }[]; }[]; }
+export interface HotSearchData { sites: { siteName: string; items: { title: string; hotness: string; link: string; desc: string; perspectives: { role: string; view: string }[]; }[]; }[]; }
 export interface AnnouncementAnalysis { summary: string; opinion: string; reason: string; conclusion: string; }
 export interface DailyReviewData { marketOverview: { indexValue: string; indexChange: string; summary: string; volume: string; mainFlow: string; }; stocks: { name: string; code: string; price: string; change: string; turnover: string; volume: string; opinion: string; takeProfit: string; stopLoss: string; reason: string; }[]; announcements: AnnouncementAnalysis[]; }
-export interface FinanceNewsData { news: { source: string; time: string; title: string; desc: string; goodSectors: string; goodStocks: string; reason: string; }[]; }
-export interface GlobalConflictData { conflicts: { region: string; duration: string; desc: string; analysis: string; impacts: { name: string; change: string; }[]; opinion: string; reason: string; source: string; }[]; }
-export interface FutureForecastData { period: string; riskWarning: string; themes: { tag: string; name: string; event: string; judgment: string; stock: string; holdDays: string; buyRange: string; target: string; }[]; avoidSectors: { tags: string[]; reason: string; }; events: { name: string; time: string; }[]; strategy: { position: string; positionDesc: string; attack: string; defense: string; view: string; }; }
+export interface FinanceNewsData { news: { source: string; time: string; title: string; link: string; desc: string; goodSectors: string; goodStocks: string; reason: string; }[]; }
+export interface GlobalConflictData { conflicts: { region: string; duration: string; desc: string; sideA: { name: string; opinion: string; reason: string; }; sideB: { name: string; opinion: string; reason: string; }; analysis: string; impacts: { name: string; change: string; }[]; source: string; }[]; }
+export interface FutureForecastData { period: string; riskWarning: string; themes: { tag: string; name: string; event: string; judgment: string; stock: string; reason: string; upstream: string; downstream: string; holdDays: string; buyRange: string; target: string; }[]; avoidSectors: { tags: string[]; reason: string; }; events: { name: string; time: string; }[]; strategy: { position: string; positionDesc: string; attack: string; defense: string; view: string; }; }
 
 interface DataContextType {
   hotSearch: HotSearchData; dailyReview: DailyReviewData; financeNews: FinanceNewsData; globalConflict: GlobalConflictData; futureForecast: FutureForecastData;
@@ -23,7 +23,7 @@ interface DataContextType {
 }
 
 // 原始占位数据略（保持你原来的 initialData 不变，只是作为 fallback）
-const initialHotSearch: HotSearchData = { sites: [{ siteName: "新浪微博", items: [{ title: "全球半导体出口限制引发供应链波动", hotness: "4.2亿", desc: "...", analysis: "..." }] }] };
+const initialHotSearch: HotSearchData = { sites: [{ siteName: "新浪微博", items: [{ title: "全球半导体出口限制引发供应链波动", hotness: "4.2亿", link: "", desc: "...", perspectives: [{ role: "综合视角", view: "..." }] }] }] };
 const initialDailyReview: DailyReviewData = { marketOverview: { indexValue: "3,278.45", indexChange: "+1.24%", summary: "...", volume: "8,421亿", mainFlow: "+245亿" }, stocks: [], announcements: [] };
 const initialFinanceNews: FinanceNewsData = { news: [] };
 const initialGlobalConflict: GlobalConflictData = { conflicts: [] };

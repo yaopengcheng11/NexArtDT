@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, MessageSquare, Lightbulb, PlayCircle, HelpCircle, TrendingUp, Edit, Check, Plus, X } from 'lucide-react';
+import { Eye, MessageSquare, Lightbulb, PlayCircle, HelpCircle, TrendingUp, Edit, Check, Plus, X, ExternalLink, UserMinus, UserCheck, Scale } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { cn } from '../lib/utils';
 
@@ -138,18 +138,24 @@ export function HotSearch() {
                           <span className="text-[10px] text-on-surface-variant flex items-center gap-1">
                             <TrendingUp className="w-3 h-3" /> 热度: {item.hotness}
                           </span>
+                          {item.link && (
+                            <a
+                              href={item.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-[10px] text-secondary hover:text-secondary/80 flex items-center gap-0.5 transition-colors"
+                            >
+                              <ExternalLink className="w-2.5 h-2.5" /> 原文
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
                   <p className="text-[11px] text-on-surface-variant leading-relaxed">{item.desc}</p>
-                  <div className="bg-surface-container-low p-3 rounded-lg space-y-1.5">
-                    <div className="flex items-center gap-1.5 text-secondary text-[10px] font-bold uppercase tracking-wider">
-                      <Lightbulb className="w-3.5 h-3.5" />
-                      <span>分析与观点</span>
-                    </div>
-                    <p className="text-[11px] font-medium text-on-surface leading-snug italic">{item.analysis}</p>
-                  </div>
+                  {/* Multi-perspective view */}
+                  <PerspectiveView perspectives={item.perspectives} />
                 </div>
               </div>
             ))}
@@ -162,6 +168,61 @@ export function HotSearch() {
           暂无热搜数据，点击顶部刷新后会重新拉取内容。
         </div>
       )}
+    </div>
+  );
+}
+
+// 多视角观点展示组件
+function PerspectiveView({ perspectives }: { perspectives?: { role: string; view: string }[] }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const items = Array.isArray(perspectives) && perspectives.length > 0 ? perspectives : [];
+
+  if (items.length === 0) return null;
+
+  const roleIcon = (role: string) => {
+    if (role.includes('黑粉') || role.includes('批评') || role.includes('质疑')) return <UserMinus className="w-3 h-3" />;
+    if (role.includes('粉丝') || role.includes('拥护') || role.includes('追捧')) return <UserCheck className="w-3 h-3" />;
+    return <Scale className="w-3 h-3" />;
+  };
+
+  const roleColor = (role: string) => {
+    if (role.includes('黑粉') || role.includes('批评') || role.includes('质疑')) return 'text-red-500 border-red-500/30 bg-red-500/10';
+    if (role.includes('粉丝') || role.includes('拥护') || role.includes('追捧')) return 'text-green-500 border-green-500/30 bg-green-500/10';
+    return 'text-blue-500 border-blue-500/30 bg-blue-500/10';
+  };
+
+  const activeColor = (role: string) => {
+    if (role.includes('黑粉') || role.includes('批评') || role.includes('质疑')) return 'border-red-500 bg-red-500/5';
+    if (role.includes('粉丝') || role.includes('拥护') || role.includes('追捧')) return 'border-green-500 bg-green-500/5';
+    return 'border-blue-500 bg-blue-500/5';
+  };
+
+  return (
+    <div className="bg-surface-container-low rounded-lg overflow-hidden">
+      {/* Tab buttons */}
+      <div className="flex border-b border-outline-variant/10">
+        {items.map((p, i) => (
+          <button
+            key={i}
+            onClick={() => setActiveIndex(i)}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold transition-all border-b-2",
+              i === activeIndex
+                ? cn(roleColor(p.role).split(' ')[0], 'border-b-2', activeColor(p.role).split(' ')[0])
+                : "text-on-surface-variant border-transparent hover:text-on-surface/70"
+            )}
+          >
+            {roleIcon(p.role)}
+            <span className="truncate">{p.role}</span>
+          </button>
+        ))}
+      </div>
+      {/* Active view content */}
+      <div className="p-3">
+        <p className="text-[11px] font-medium text-on-surface leading-relaxed italic">
+          "{items[activeIndex]?.view}"
+        </p>
+      </div>
     </div>
   );
 }

@@ -64,9 +64,9 @@ function MainApp() {
       moduleName: '热搜早知道',
       contextKey: 'hotSearch',
       schema: hotSearchSchema,
-      getExtraPrompt: () => `请获取以下网站的热搜数据：${customSites.join(', ')}。每个网站至少提供 5 条热点内容。${
+      getExtraPrompt: () => `请获取以下网站的热搜数据：${customSites.join(', ')}。每个网站至少提供 5 条热点内容。每条内容务必提供原始链接URL（link字段）。${
         customTopics.length > 0 ? `用户特别关注以下话题：${customTopics.join(', ')}，请尽量包含相关内容。` : ''
-      }`,
+      }\n\n【重要格式要求】每条热点必须提供perspectives数组，包含三种不同视角的观点分析：\n1. 黑粉视角：以批评、质疑、挑刺的角度分析该热点，指出其问题或风险\n2. 狂热粉丝视角：以拥护、追捧的角度分析该热点，强调其价值和积极面\n3. 客观官方视角：以中立、理性、官方立场分析该热点，给出平衡的评估\n每个视角都需要有 role（角色名称）和 view（具体观点）两个字段。`,
     },
     {
       moduleName: '每日复盘',
@@ -78,7 +78,7 @@ function MainApp() {
       moduleName: '财经要闻',
       contextKey: 'financeNews',
       schema: financeNewsSchema,
-      getExtraPrompt: () => '',
+      getExtraPrompt: () => '每条财经新闻务必提供原始链接URL（link字段），确保链接来源于正规财经媒体（如东方财富、同花顺、新浪财经等）。',
     },
     {
       moduleName: '全球冲突进程',
@@ -90,7 +90,7 @@ function MainApp() {
       moduleName: '未来预判',
       contextKey: 'futureForecast',
       schema: futureForecastSchema,
-      getExtraPrompt: () => '',
+      getExtraPrompt: () => '【重要说明】推荐个股（stock字段）不限于用户的自选股，你可以从A股全市场范围中精选最符合该题材逻辑的个股。\n\n每条推荐必须包含：\n1. reason（推荐理由）：详细说明为什么推荐该个股，包括基本面、技术面、题材契合度等\n2. upstream（上游产业链）：列出该个股的上游核心供应商/原材料公司\n3. downstream（下游产业链）：列出该个股的下游核心客户/渠道/应用领域公司',
     },
   ] as const;
 

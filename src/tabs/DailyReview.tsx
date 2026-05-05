@@ -73,29 +73,35 @@ export function DailyReview() {
   };
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto pt-16 pb-20 px-4">
+    <div className="space-y-5 xl:space-y-6 max-w-5xl xl:max-w-7xl 2xl:max-w-[90vw] mx-auto pt-16 pb-20 px-4 sm:px-6 2xl:px-8">
+
       {/* Market Summary Hero */}
-      <section className="relative overflow-hidden rounded-xl p-4 bg-surface-container-lowest border-l-2 border-secondary">
+      <section className="relative overflow-hidden rounded-xl p-5 bg-surface-container-lowest border-l-2 border-secondary">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-secondary/5 rounded-full blur-3xl"></div>
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h2 className="text-on-primary-container text-[10px] font-label font-bold tracking-widest mb-1">MARKET OVERVIEW</h2>
-            <div className="flex items-baseline gap-2">
-              {/* 💥 安全读取：添加 || '--' */}
-              <span className="text-xl font-headline font-extrabold text-on-surface">{marketOverview.indexValue || '--'}</span>
-              <span className={cn("font-bold text-sm", getStockColor(marketOverview.indexChange || ''))}>{marketOverview.indexChange || '--'}</span>
+        <div className="relative z-10 flex flex-col gap-5">
+          {/* Header + Index Row */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="w-full lg:w-auto">
+              <h2 className="text-on-primary-container text-[10px] font-label font-bold tracking-widest mb-2">MARKET OVERVIEW</h2>
+              <div className="flex items-baseline gap-3">
+                <span className="text-2xl 2xl:text-3xl font-headline font-extrabold text-on-surface">{marketOverview.indexValue || '--'}</span>
+                <span className={cn("font-bold text-sm px-2 py-0.5 rounded-md bg-surface-container-high", getStockColor(marketOverview.indexChange || ''))}>{marketOverview.indexChange || '--'}</span>
+              </div>
             </div>
-            <p className="text-on-surface-variant text-[11px] mt-1.5 leading-relaxed">{marketOverview.summary || '暂无大盘摘要数据...'}</p>
+            <div className="flex gap-3 w-full lg:w-auto">
+              <div className="flex-1 lg:flex-none bg-surface-container p-3 px-6 rounded-xl text-center lg:text-left">
+                <span className="text-[10px] text-on-primary-container block mb-1 font-medium tracking-wide">成交额</span>
+                <span className="text-base 2xl:text-lg font-headline font-bold text-on-surface">{marketOverview.volume || '--'}</span>
+              </div>
+              <div className="flex-1 lg:flex-none bg-surface-container p-3 px-6 rounded-xl text-center lg:text-left">
+                <span className="text-[10px] text-on-primary-container block mb-1 font-medium tracking-wide">主力流向</span>
+                <span className={cn("text-base 2xl:text-lg font-headline font-bold", getStockColor(marketOverview.mainFlow || ''))}>{marketOverview.mainFlow || '--'}</span>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-3">
-            <div className="bg-surface-container p-3 rounded-xl">
-              <span className="text-[9px] text-on-primary-container block mb-0.5">成交额</span>
-              <span className="text-base font-headline font-bold">{marketOverview.volume || '--'}</span>
-            </div>
-            <div className="bg-surface-container p-3 rounded-xl">
-              <span className="text-[9px] text-on-primary-container block mb-0.5">主力流向</span>
-              <span className={cn("text-base font-headline font-bold", getStockColor(marketOverview.mainFlow || ''))}>{marketOverview.mainFlow || '--'}</span>
-            </div>
+          {/* Summary - 独立行，更宽敞 */}
+          <div className="bg-surface-container-high/40 rounded-lg p-3 border border-outline-variant/10">
+            <p className="text-on-surface-variant text-[12px] 2xl:text-sm leading-relaxed md:leading-loose">{marketOverview.summary || '暂无大盘摘要数据...'}</p>
           </div>
         </div>
       </section>
@@ -148,7 +154,7 @@ export function DailyReview() {
       )}
 
       {/* Stock Cards Grid */}
-      <div className="grid grid-cols-1 gap-3 mb-8">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(380px,100%),1fr))] gap-4 mb-8">
         {stocks.map((stock, index) => {
           // 💥 安全处理个股属性，防止 .includes() 报错
           const opinion = stock?.opinion || '观望';
@@ -273,7 +279,7 @@ export function DailyReview() {
                 {ann?.summary || '--'}
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 <div className="bg-surface-container-high rounded-lg p-3">
                   <span className="text-[9px] text-on-surface-variant uppercase tracking-wider block mb-1">AI 观点</span>
                   <p className="text-[11px] font-medium text-white">{ann?.opinion || '--'}</p>

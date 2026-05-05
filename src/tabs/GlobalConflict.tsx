@@ -7,7 +7,8 @@ export function GlobalConflict() {
   const conflicts = Array.isArray(globalConflict?.conflicts) ? globalConflict.conflicts : [];
 
   return (
-    <div className="pt-16 pb-20 px-4 space-y-4 max-w-2xl mx-auto">
+    <div className="pt-16 pb-20 px-4 sm:px-6 2xl:px-8 space-y-5 xl:space-y-6 max-w-5xl xl:max-w-7xl 2xl:max-w-[90vw] mx-auto">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(480px,100%),1fr))] gap-4 xl:gap-5">
       {conflicts.map((conflict, index) => (
         <section key={index} className="bg-surface-container rounded-xl overflow-hidden shadow-2xl relative">
           {index === 0 && <div className="h-1 bg-gradient-to-r from-secondary to-transparent w-full"></div>}
@@ -86,6 +87,7 @@ export function GlobalConflict() {
           </div>
         </section>
       ))}
+      </div>
 
       {conflicts.length === 0 && (
         <div className="bg-surface-container rounded-xl p-6 text-center text-sm text-on-surface-variant">

@@ -1,12 +1,13 @@
-import { MoreHorizontal, Bookmark, TrendingUp, BarChart2, Sparkles, ExternalLink } from 'lucide-react';
+import { MoreHorizontal, Bookmark, TrendingUp, BarChart2, Sparkles, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { cn, isValidUrl } from '../lib/utils';
 
 export function FinanceNews() {
   const { financeNews } = useData();
   const newsList = Array.isArray(financeNews?.news) ? financeNews.news : [];
 
   return (
-    <div className="flex flex-col gap-4 max-w-2xl mx-auto pt-16 pb-20 px-4">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(420px,100%),1fr))] gap-4 xl:gap-5 max-w-5xl xl:max-w-7xl 2xl:max-w-[90vw] mx-auto pt-16 pb-20 px-4 sm:px-6 2xl:px-8">
       {newsList.map((news, index) => (
         <article key={index} className="bg-surface-container rounded-xl overflow-hidden shadow-sm relative">
           {index === 1 && <div className="absolute left-0 top-4 bottom-4 w-0.5 bg-primary rounded-full"></div>}
@@ -21,16 +22,20 @@ export function FinanceNews() {
                   <p className="text-[11px] font-bold text-on-surface">{news.source}</p>
                   <p className="text-[9px] text-on-surface-variant">{news.time}</p>
                 </div>
-                {news.link && (
+                {news.link && isValidUrl(news.link) ? (
                   <a
                     href={news.link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="ml-auto text-[10px] text-secondary hover:text-secondary/80 flex items-center gap-0.5 transition-colors"
                   >
-                    <ExternalLink className="w-3 h-3" /> 阅读原文
+                    <ExternalLink className="w-3 h-3" /> 原文
                   </a>
-                )}
+                ) : news.link ? (
+                  <span className="ml-auto text-[10px] text-on-surface-variant/50 flex items-center gap-0.5 cursor-not-allowed" title="链接地址无效或已失效">
+                    <AlertTriangle className="w-3 h-3" /> 原文不可用
+                  </span>
+                ) : null}
               </div>
             </div>
 

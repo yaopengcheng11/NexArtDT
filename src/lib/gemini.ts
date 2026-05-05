@@ -288,6 +288,7 @@ function transformFutureForecast(data: any) {
       event: String(pickFirst(t.event, t.event_desc, t.catalyst, t.催化事件)),
       judgment: String(pickFirst(t.judgment, t.analysis, t.comment, t.板块判断, t.判断)),
       stock: String(pickFirst(t.stock, t.related_stocks, t.relatedStocks, t.pick, t.推荐个股)),
+      stockName: String(pickFirst(t.stock_name, t.stockName, t.名称, t.个股名称, t.推荐个股名称)),
       reason: String(pickFirst(t.reason, t.logic, t.理由, t.推荐逻辑, t.投资逻辑)),
       upstream: String(pickFirst(t.upstream, t.上游, t.上游产业, t.upstreamIndustry, t.upstream_industry)),
       downstream: String(pickFirst(t.downstream, t.下游, t.下游产业, t.downstreamIndustry, t.downstream_industry)),

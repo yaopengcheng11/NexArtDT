@@ -9,7 +9,7 @@ export function FutureForecast() {
   const strategy = futureForecast?.strategy ?? { position: '', positionDesc: '', attack: '', defense: '', view: '' };
 
   return (
-    <div className="pt-16 pb-20 px-4 space-y-4 max-w-5xl mx-auto">
+    <div className="pt-16 pb-20 px-4 sm:px-6 2xl:px-8 space-y-5 xl:space-y-6 max-w-5xl xl:max-w-7xl 2xl:max-w-[90vw] mx-auto">
       {/* Forecast Period Card */}
       <section className="relative overflow-hidden rounded-xl p-3 bg-surface-container border-l-4 border-secondary">
         <div className="flex justify-between items-center">
@@ -28,7 +28,7 @@ export function FutureForecast() {
       </div>
 
       {/* Trending Themes Bento Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(320px,100%),1fr))] gap-4 xl:gap-5">
         {themes.map((theme, index) => (
           <div key={index} className="bg-surface-container rounded-xl overflow-hidden flex flex-col hover:shadow-2xl hover:shadow-secondary/5 transition-all duration-300">
             <div className="p-4 space-y-3 flex-grow">
@@ -48,7 +48,10 @@ export function FutureForecast() {
               </div>
               <div className="pt-3 border-t border-outline-variant/10">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[9px] font-bold text-red-500">推荐个股: {theme.stock}</span>
+                  <span className="text-[9px] font-bold text-red-500">
+                    推荐个股: <span className="text-on-surface">{theme.stockName || theme.stock}</span>
+                    {theme.stock && theme.stockName && <span className="text-on-surface-variant font-normal"> ({theme.stock})</span>}
+                  </span>
                   <span className="text-[8px] text-on-surface-variant">持股: {theme.holdDays}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-2">
@@ -98,7 +101,7 @@ export function FutureForecast() {
       )}
 
       {/* Risk Warning & Events */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(360px,100%),1fr))] gap-4 xl:gap-5">
         {/* Sectors to Avoid */}
         <div className="bg-green-500/10 rounded-xl p-4 border-l-4 border-green-500">
           <div className="flex items-center gap-2 mb-3">
@@ -139,7 +142,7 @@ export function FutureForecast() {
         </div>
         <h3 className="font-headline font-extrabold text-base mb-4 text-primary">核心策略概览</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 xl:gap-6 mb-5">
           <div className="space-y-0.5">
             <p className="text-[9px] uppercase font-bold tracking-widest text-on-primary-container">总体仓位</p>
             <div className="flex items-end gap-1.5">

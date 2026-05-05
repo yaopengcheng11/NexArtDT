@@ -26,7 +26,7 @@ export function TopBar({ title, subtitle, icon, updateTime, className, onRefresh
 
   return (
     <header className={cn("fixed top-0 w-full z-50 px-4 py-3 border-b border-white/5 glass-effect", className)}>
-      <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
+      <div className="max-w-5xl xl:max-w-7xl 2xl:max-w-[90vw] mx-auto flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 overflow-hidden flex-1">
           {icon && (
             <div className="flex-shrink-0 scale-110">

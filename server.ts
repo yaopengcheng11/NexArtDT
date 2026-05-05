@@ -269,13 +269,14 @@ async function startServer() {
         warPromptInjector = `\n\n【最高指令 (CRITICAL)】：在分析 impacts 时，绝对禁止出现任何中国 A 股个股名称（如茅台、宁德时代等）。你必须分析该事件对全球宏观资产的影响，如："布伦特原油"、"现货黄金"、"美元指数"、"航运指数"、"军工ETF" 等。\n\n【双立场+客观分析要求】：对于每场冲突，必须提供以下三个维度：\n1. sideA（甲方）：包含 name（甲方名称）、opinion（甲方的立场和观点）、reason（甲方的理由和论据）\n2. sideB（乙方）：包含 name（乙方名称）、opinion（乙方的立场和观点）、reason（乙方的理由和论据）\n3. analysis（客观分析）：从第三方中立、客观的角度分析该事件及其对金融市场的影响`;
       }
 
-      if (model === 'gemini') {
+    if (model === 'gemini') {
         const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
         if (!apiKey || apiKey.includes('TODO')) {
           return res.status(400).json({ error: 'GEMINI_API_KEY is not configured or is invalid.' });
         }
         const { GoogleGenAI } = await import('@google/genai');
-        const ai = new GoogleGenAI({ apiKey });
+        const proxyUrl = process.env.GEMINI_PROXY_URL;
+        const ai = proxyUrl ? new GoogleGenAI({ apiKey, httpOptions: { baseUrl: proxyUrl } }) : new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
           model: 'gemini-3.1-pro-preview',
           contents: `You are a top-tier financial analyst. Provide the latest, real-world data for the module: "${moduleName}". Use the googleSearch tool to find the most up-to-date information from today. Ensure all text is in Chinese. ${extraPrompt}\n\nCRITICAL: You MUST use the following real-time market data where applicable. DO NOT invent numbers.\n\n【实时市场数据】\n${marketContext}${warPromptInjector}`,
@@ -385,7 +386,8 @@ async function startServer() {
       if (model === 'gemini') {
         const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
         const { GoogleGenAI } = await import('@google/genai');
-        const ai = new GoogleGenAI({ apiKey });
+        const proxyUrl = process.env.GEMINI_PROXY_URL;
+        const ai = proxyUrl ? new GoogleGenAI({ apiKey, httpOptions: { baseUrl: proxyUrl } }) : new GoogleGenAI({ apiKey });
         const contents = [
           { role: 'user', parts: [{ text: systemPrompt }] },
           { role: 'model', parts: [{ text: '好的，我已经了解了最新的市场数据。请问有什么可以帮您？' }] },

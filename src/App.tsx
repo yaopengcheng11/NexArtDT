@@ -64,9 +64,34 @@ function MainApp() {
       moduleName: '热搜早知道',
       contextKey: 'hotSearch',
       schema: hotSearchSchema,
-      getExtraPrompt: () => `请获取以下网站的热搜数据：${customSites.join(', ')}。每个网站至少提供 5 条热点内容。每条内容务必提供原始链接URL（link字段）。${
-        customTopics.length > 0 ? `用户特别关注以下话题：${customTopics.join(', ')}，请尽量包含相关内容。` : ''
-      }\n\n【重要格式要求】每条热点必须提供perspectives数组，包含三种不同视角的观点分析：\n1. 黑粉视角：以批评、质疑、挑刺的角度分析该热点，指出其问题或风险\n2. 狂热粉丝视角：以拥护、追捧的角度分析该热点，强调其价值和积极面\n3. 客观官方视角：以中立、理性、官方立场分析该热点，给出平衡的评估\n每个视角都需要有 role（角色名称）和 view（具体观点）两个字段。`,
+      getExtraPrompt: () => {
+        const hasTopics = customTopics.length > 0;
+        const topicsPart = hasTopics
+          ? `\n\n【特别关注话题】用户特别关注以下话题：${customTopics.join('、')}。请在这些话题中优先选择与热点相关的内容。`
+          : '\n\n【重要】用户没有添加特别关注的话题，因此你的所有内容必须严格从上述平台的实时热搜/热门榜单中获取，不得自行编造或混入其他非热搜内容。';
+        return `【核心指令 - 必须严格遵守】你是热搜数据聚合器，不是内容生成器。
+
+【数据来源】请获取以下平台的实时热搜/热门榜单数据：${customSites.join(', ')}。每个平台至少提供 5 条当前热搜内容。${topicsPart}
+
+【绝对禁止】
+- 禁止编造任何热搜话题或热度数据
+- 禁止使用大模型知识库中的过时内容替代实时热搜
+- 禁止混入非热搜榜单的内容
+- 每条内容的标题、热度数值、描述必须真实反映该平台的实时热搜情况
+
+【链接要求 (重要)】link字段必须使用 搜索URL 格式（非详情页URL），确保网址可访问且不失效。
+格式示例：
+- 微博: https://s.weibo.com/weibo?q=关键词
+- bilibili: https://search.bilibili.com/all?keyword=关键词
+- 知乎: https://www.zhihu.com/search?type=content&q=关键词
+- 百度: https://www.baidu.com/s?wd=关键词
+
+【重要格式要求】每条热点必须提供perspectives数组，包含三种不同视角的观点分析：
+1. 黑粉视角：以批评、质疑、挑刺的角度分析该热点，指出其问题或风险
+2. 狂热粉丝视角：以拥护、追捧的角度分析该热点，强调其价值和积极面
+3. 客观官方视角：以中立、理性、官方立场分析该热点，给出平衡的评估
+每个视角都需要有 role（角色名称）和 view（具体观点）两个字段。`;
+      },
     },
     {
       moduleName: '每日复盘',
@@ -78,7 +103,7 @@ function MainApp() {
       moduleName: '财经要闻',
       contextKey: 'financeNews',
       schema: financeNewsSchema,
-      getExtraPrompt: () => '每条财经新闻务必提供原始链接URL（link字段），确保链接来源于正规财经媒体（如东方财富、同花顺、新浪财经等）。',
+      getExtraPrompt: () => '每条财经新闻务必提供原始链接URL（link字段），确保链接可访问。请使用搜索URL格式，如：https://so.eastmoney.com/news/s?keyword=标题关键词 或 https://search.sina.com.cn/?q=标题关键词。不要使用文章详情页URL（文章页URL极易失效）。',
     },
     {
       moduleName: '全球冲突进程',

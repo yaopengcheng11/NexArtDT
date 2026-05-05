@@ -196,7 +196,8 @@ export const futureForecastSchema = {
           name: { type: Type.STRING },
           event: { type: Type.STRING },
           judgment: { type: Type.STRING },
-          stock: { type: Type.STRING },
+          stock: { type: Type.STRING, description: '推荐个股的股票代码，如：300750' },
+          stockName: { type: Type.STRING, description: '推荐个股的股票名称，如：宁德时代' },
           reason: { type: Type.STRING, description: '推荐该个股的核心理由和投资逻辑' },
           upstream: { type: Type.STRING, description: '该个股的上游产业和核心供应商/原材料公司' },
           downstream: { type: Type.STRING, description: '该个股的下游产业和核心客户/渠道公司' },
@@ -204,7 +205,7 @@ export const futureForecastSchema = {
           buyRange: { type: Type.STRING },
           target: { type: Type.STRING },
         },
-        required: ['tag', 'name', 'event', 'judgment', 'stock', 'reason', 'upstream', 'downstream', 'holdDays', 'buyRange', 'target'],
+        required: ['tag', 'name', 'event', 'judgment', 'stock', 'stockName', 'reason', 'upstream', 'downstream', 'holdDays', 'buyRange', 'target'],
       },
     },
     avoidSectors: {

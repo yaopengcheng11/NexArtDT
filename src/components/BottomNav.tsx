@@ -17,7 +17,7 @@ export function BottomNav({ activeTab, onChange }: BottomNavProps) {
 
   return (
     <nav className="fixed bottom-0 w-full z-50 pb-safe glass-effect border-t border-outline-variant/15 shadow-[0_-4px_20px_rgba(0,0,0,0.4)] rounded-t-2xl">
-      <div className="flex justify-around items-center h-16 px-4 max-w-5xl mx-auto">
+      <div className="flex justify-around items-center h-16 px-4 max-w-5xl xl:max-w-7xl 2xl:max-w-[90vw] mx-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

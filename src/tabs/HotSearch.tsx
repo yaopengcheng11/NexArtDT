@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Eye, MessageSquare, Lightbulb, PlayCircle, HelpCircle, TrendingUp, Edit, Check, Plus, X, ExternalLink, UserMinus, UserCheck, Scale } from 'lucide-react';
+import { Eye, MessageSquare, Lightbulb, PlayCircle, HelpCircle, TrendingUp, Edit, Check, Plus, X, ExternalLink, AlertTriangle, UserMinus, UserCheck, Scale } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { cn } from '../lib/utils';
+import { isValidUrl } from '../lib/utils';
 
 const AVAILABLE_SITES = ['bilibili', '知乎', '新浪微博', '抖音', '小红书', '百度', '头条'];
 
@@ -42,7 +43,7 @@ export function HotSearch() {
   };
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto pt-16 pb-20 px-4">
+    <div className="space-y-6 xl:space-y-8 max-w-5xl xl:max-w-7xl 2xl:max-w-[90vw] mx-auto pt-16 pb-20 px-4 sm:px-6 2xl:px-8">
       {/* Customization Header */}
       <div className="flex justify-between items-end">
         <h2 className="text-base font-headline font-bold text-primary">热搜聚合</h2>
@@ -116,6 +117,7 @@ export function HotSearch() {
       )}
 
       {/* Dynamic Sites Rendering */}
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(420px,100%),1fr))] gap-6 xl:gap-8">
       {sites.map((site, siteIndex) => (
         <section key={siteIndex} className="space-y-3">
           <div className="flex items-center justify-between px-1">
@@ -138,7 +140,7 @@ export function HotSearch() {
                           <span className="text-[10px] text-on-surface-variant flex items-center gap-1">
                             <TrendingUp className="w-3 h-3" /> 热度: {item.hotness}
                           </span>
-                          {item.link && (
+                          {item.link && isValidUrl(item.link) ? (
                             <a
                               href={item.link}
                               target="_blank"
@@ -148,7 +150,14 @@ export function HotSearch() {
                             >
                               <ExternalLink className="w-2.5 h-2.5" /> 原文
                             </a>
-                          )}
+                          ) : item.link ? (
+                            <span
+                              className="text-[10px] text-on-surface-variant/50 flex items-center gap-0.5 cursor-not-allowed"
+                              title="链接地址无效或已失效"
+                            >
+                              <AlertTriangle className="w-2.5 h-2.5" /> 原文不可用
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                     </div>
@@ -162,6 +171,7 @@ export function HotSearch() {
           </div>
         </section>
       ))}
+      </div>
 
       {sites.length === 0 && (
         <div className="bg-surface-container rounded-xl p-6 text-center text-sm text-on-surface-variant">

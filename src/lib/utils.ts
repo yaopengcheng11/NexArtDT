@@ -24,3 +24,13 @@ export function getOpinionBgColor(opinion: string) {
   if (opinion.includes('预警') || opinion.includes('观望') || opinion.includes('中性')) return 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30';
   return 'bg-outline/20 text-outline border-outline/30';
 }
+
+export function isValidUrl(url: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}

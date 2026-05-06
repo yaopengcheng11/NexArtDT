@@ -9,7 +9,7 @@
 - 前端：`React 19 + Vite 6 + TypeScript + Tailwind CSS v4`
 - 后端：`Express + TypeScript`
 - 数据与认证：`Firebase Auth + Firestore`
-- AI 模型：`Gemini 3.1 Pro / DeepSeek / 豆包 (Doubao) / 小米 MiMo`
+- AI 模型：`Gemini 3 Flash / GPT-5.4 Mini / DeepSeek / 豆包 (Doubao) / 小米 MiMo`
 - 邮件能力：`Nodemailer + QQ SMTP`
 
 ## 项目目标
@@ -175,7 +175,7 @@ Firebase 配置文件：
 
 当前实现说明：
 
-- `Gemini 3.1 Pro` 已支持
+- `Gemini 3 Flash` 已支持
 - 其他模型暂未支持 PDF 分析
 
 ### `POST /api/send-email`
@@ -207,7 +207,8 @@ Firebase 配置文件：
 
 当前代码中内置了以下模型接入方式：
 
-- `gemini` — 走 `@google/genai` SDK，使用 `gemini-3.1-pro-preview` 模型
+- `gemini` — 走 `@google/genai` SDK，默认使用 `gemini-3-flash-preview` 模型，可通过 `GEMINI_MODEL_ID` 覆盖
+- `openai` — 走 OpenAI 兼容格式，默认 `https://api.openai.com/v1/chat/completions`
 - `deepseek` — 走 OpenAI 兼容格式，`https://api.deepseek.com/v1/chat/completions`
 - `doubao` — 走 OpenAI 兼容格式，`https://ark.cn-beijing.volces.com/api/v3/chat/completions`
 - `mimo` — 走 OpenAI 兼容格式，默认 `https://api.xiaomimimo.com/v1/chat/completions`
@@ -269,6 +270,16 @@ VITE_API_BASE_URL=
 # Gemini
 GEMINI_API_KEY=
 VITE_GEMINI_API_KEY=
+GEMINI_MODEL_ID=gemini-3-flash-preview
+VITE_GEMINI_MODEL_ID=gemini-3-flash-preview
+
+# OpenAI
+OPENAI_API_KEY=
+VITE_OPENAI_API_KEY=
+OPENAI_MODEL_ID=gpt-5.4-mini
+VITE_OPENAI_MODEL_ID=gpt-5.4-mini
+OPENAI_PROXY_URL=
+VITE_OPENAI_PROXY_URL=
 
 # DeepSeek
 DEEPSEEK_API_KEY=
@@ -296,6 +307,7 @@ QQ_SMTP_CODE=
 
 - 当前代码会同时读取前端前缀变量和服务端变量
 - `Gemini` 优先读取 `GEMINI_API_KEY`，其次读取 `VITE_GEMINI_API_KEY`
+- `OpenAI` 优先读取 `OPENAI_API_KEY`，其次读取 `VITE_OPENAI_API_KEY`
 - 其他模型也有类似的前后端双读取逻辑
 - 如果前后端同域部署，`VITE_API_BASE_URL` 可以留空
 - 如果后端单独部署到别的域名，需要把 `VITE_API_BASE_URL` 配成完整地址

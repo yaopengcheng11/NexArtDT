@@ -10,6 +10,12 @@ async function parseErrorResponse(response: Response) {
   if (contentType.includes('application/json')) {
     const data = await response.json().catch(() => null);
     if (data && typeof data.error === 'string') {
+      if (data.error.includes('CONSUMER_SUSPENDED') || data.error.includes('has been suspended')) {
+        return 'Gemini API Key 已被 Google 暂停，当前请求无法由 Gemini 处理。';
+      }
+      if (data.error.includes('fetch failed') || data.error.includes('UND_ERR_CONNECT_TIMEOUT') || data.error.includes('Connect Timeout Error')) {
+        return 'AI 模型网络连接超时，当前环境暂时连不上模型接口。请配置可访问的代理或 OpenAI 兼容中转地址。';
+      }
       return data.error;
     }
   } else {

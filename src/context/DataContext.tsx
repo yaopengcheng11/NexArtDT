@@ -73,7 +73,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [customStocks, setCustomStocksState] = useState<string[]>(() => getLocalData('dt_customStocks', ['贵州茅台', '宁德时代', '比亚迪']));
   const [customSites, setCustomSitesState] = useState<string[]>(() => getLocalData('dt_customSites', ['bilibili', '知乎', '新浪微博']));
   const [customTopics, setCustomTopicsState] = useState<string[]>(() => getLocalData('dt_customTopics', []));
-  const [globalModel, setGlobalModel] = useState<string>(() => localStorage.getItem('ai_model') || 'gemini');
+  const [globalModel, setGlobalModelState] = useState<string>(() => localStorage.getItem('ai_model') || 'gemini');
 
   useEffect(() => {
     if (user) {
@@ -116,6 +116,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const setCustomStocks = (stocks: string[]) => { setCustomStocksState(stocks); savePreferences({ customStocks: stocks }); };
   const setCustomSites = (sites: string[]) => { setCustomSitesState(sites); savePreferences({ customSites: sites }); };
   const setCustomTopics = (topics: string[]) => { setCustomTopicsState(topics); savePreferences({ customTopics: topics }); };
+  const setGlobalModel = (model: string) => {
+    setGlobalModelState(model);
+    localStorage.setItem('ai_model', model);
+  };
 
   const [lastUpdated, setLastUpdated] = useState<Record<string, string>>(() => getLocalData('dt_lastUpdated', {}));
 

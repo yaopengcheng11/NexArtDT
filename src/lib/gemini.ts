@@ -171,26 +171,6 @@ function transformDailyReview(data: any) {
   };
 }
 
-// 转换财经要闻数据结构
-function transformFinanceNews(data: any) {
-  if (!data) return data;
-
-  const newsList = data.news || data.newsList || data.财经要闻 || data.要闻列表 || [];
-
-  return {
-    news: ensureArray(newsList).map((n: any) => ({
-      source: String(pickFirst(n.source, n.media, n.publisher, n.来源)),
-      time: String(pickFirst(n.time, n.publishTime, n.publish_time, n.时间)),
-      title: String(pickFirst(n.title, n.headline, n.标题)),
-      link: String(pickFirst(n.link, n.url, n.href, n.链接, n.链接地址)),
-      desc: String(pickFirst(n.desc, n.summary, n.content, n.摘要, n.内容)),
-      goodSectors: String(pickFirst(n.good_sectors, n.goodSectors, n.benefitSectors, n.benefit_sectors, n.利好板块)),
-      goodStocks: String(pickFirst(n.good_stocks, n.goodStocks, n.benefitStocks, n.benefit_stocks, n.利好个股)),
-      reason: String(pickFirst(n.reason, n.analysis, n.comment, n.理由, n.分析)),
-    })),
-  };
-}
-
 // 转换热搜数据结构
 function transformHotSearch(data: any) {
   if (!data) return data;
@@ -325,9 +305,6 @@ export function normalizeModuleData(moduleName: string, data: any) {
 
   if (moduleName === '每日复盘' || moduleName === 'dailyReview') {
     return transformDailyReview(data);
-  }
-  if (moduleName === '财经要闻' || moduleName === 'financeNews') {
-    return transformFinanceNews(data);
   }
   if (moduleName === '热搜早知道' || moduleName === 'hotSearch') {
     return transformHotSearch(data);

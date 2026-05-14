@@ -12,7 +12,7 @@ export function ShareModal({ isOpen, onClose, activeTab }: { isOpen: boolean, on
   const [step, setStep] = useState<ShareStep>('select');
   const [isGenerating, setIsGenerating] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const { hotSearch, dailyReview, financeNews, globalConflict, futureForecast } = useData();
+  const { hotSearch, dailyReview, globalConflict, futureForecast } = useData();
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
 
   // Reset step when modal opens
@@ -24,7 +24,8 @@ export function ShareModal({ isOpen, onClose, activeTab }: { isOpen: boolean, on
         case 'hot':
           initialItems = hotSearch?.sites?.flatMap(site => site.items.map(item => ({ ...item, siteName: site.siteName, selected: true }))) || [];
           break;
-        case 'review': {
+        case 'review':
+        case 'investment': {
           const market = dailyReview?.marketOverview;
           const marketItem = market ? [{
             type: 'market',
@@ -61,8 +62,6 @@ export function ShareModal({ isOpen, onClose, activeTab }: { isOpen: boolean, on
           break;
         }
         case 'finance':
-          initialItems = financeNews?.news?.map(news => ({ type: 'news', ...news, selected: true })) || [];
-          break;
         case 'conflict':
           initialItems = globalConflict?.conflicts?.map(conflict => ({ type: 'conflict', ...conflict, selected: true })) || [];
           break;
@@ -72,7 +71,7 @@ export function ShareModal({ isOpen, onClose, activeTab }: { isOpen: boolean, on
       }
       setSelectedItems(initialItems);
     }
-  }, [isOpen, activeTab, hotSearch, dailyReview, financeNews, globalConflict, futureForecast]);
+  }, [isOpen, activeTab, hotSearch, dailyReview, globalConflict, futureForecast]);
 
   if (!isOpen) return null;
 
@@ -649,8 +648,9 @@ function HiddenContentPreview({ items, activeTab }: { items: any[], activeTab: s
 function getModuleTitle(tab: string): string {
   switch (tab) {
     case 'hot': return '热搜早知道';
-    case 'review': return '每日复盘';
-    case 'finance': return '财经要闻';
+    case 'review':
+    case 'investment': return '投资总览';
+    case 'finance':
     case 'conflict': return '全球冲突进程';
     case 'forecast': return '未来预判';
     default: return '';

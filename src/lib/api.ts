@@ -43,3 +43,18 @@ export async function postJson<T>(path: string, payload: unknown): Promise<T> {
 
   return response.json() as Promise<T>;
 }
+
+// 💥 获取实时热搜数据（后端直连平台 API，不依赖 AI）
+export async function fetchRealHotSearch(sites: string[]): Promise<Record<string, { title: string; heat: string; url: string }[]>> {
+  try {
+    const response = await fetch(buildApiUrl('/api/hot-search/real-time'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sites }),
+    });
+    if (!response.ok) return {};
+    return response.json();
+  } catch {
+    return {};
+  }
+}

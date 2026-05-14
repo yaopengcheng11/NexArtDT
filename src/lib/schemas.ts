@@ -103,30 +103,6 @@ export const announcementAnalysisSchema = {
   required: ['summary', 'opinion', 'reason', 'conclusion'],
 };
 
-export const financeNewsSchema = {
-  type: Type.OBJECT,
-  properties: {
-    news: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          source: { type: Type.STRING },
-          time: { type: Type.STRING },
-          title: { type: Type.STRING },
-          desc: { type: Type.STRING },
-          link: { type: Type.STRING, description: '该新闻的原始链接URL' },
-          goodSectors: { type: Type.STRING },
-          goodStocks: { type: Type.STRING },
-          reason: { type: Type.STRING },
-        },
-        required: ['source', 'time', 'title', 'desc', 'link', 'goodSectors', 'goodStocks', 'reason'],
-      },
-    },
-  },
-  required: ['news'],
-};
-
 export const globalConflictSchema = {
   type: Type.OBJECT,
   properties: {

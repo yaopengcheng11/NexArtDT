@@ -7,12 +7,11 @@ import { normalizeModuleData } from '../lib/gemini';
 export interface HotSearchData { sites: { siteName: string; items: { title: string; hotness: string; link: string; desc: string; perspectives: { role: string; view: string }[]; }[]; }[]; }
 export interface AnnouncementAnalysis { summary: string; opinion: string; reason: string; conclusion: string; }
 export interface DailyReviewData { marketOverview: { indexValue: string; indexChange: string; summary: string; volume: string; mainFlow: string; }; stocks: { name: string; code: string; price: string; change: string; turnover: string; volume: string; opinion: string; takeProfit: string; stopLoss: string; reason: string; }[]; announcements: AnnouncementAnalysis[]; }
-export interface FinanceNewsData { news: { source: string; time: string; title: string; link: string; desc: string; goodSectors: string; goodStocks: string; reason: string; }[]; }
 export interface GlobalConflictData { conflicts: { region: string; duration: string; desc: string; sideA: { name: string; opinion: string; reason: string; }; sideB: { name: string; opinion: string; reason: string; }; analysis: string; impacts: { name: string; change: string; }[]; source: string; }[]; }
 export interface FutureForecastData { period: string; riskWarning: string; themes: { tag: string; name: string; event: string; judgment: string; stock: string; stockName: string; reason: string; upstream: string; downstream: string; holdDays: string; buyRange: string; target: string; }[]; avoidSectors: { tags: string[]; reason: string; }; events: { name: string; time: string; }[]; strategy: { position: string; positionDesc: string; attack: string; defense: string; view: string; }; }
 
 interface DataContextType {
-  hotSearch: HotSearchData; dailyReview: DailyReviewData; financeNews: FinanceNewsData; globalConflict: GlobalConflictData; futureForecast: FutureForecastData;
+  hotSearch: HotSearchData; dailyReview: DailyReviewData; globalConflict: GlobalConflictData; futureForecast: FutureForecastData;
   updateData: (module: string, data: any) => void;
   isRefreshing: Record<string, boolean>; setIsRefreshing: (module: string, isRefreshing: boolean) => void;
   getAllData: () => any; lastUpdated: Record<string, string>;
@@ -25,7 +24,6 @@ interface DataContextType {
 // 原始占位数据略（保持你原来的 initialData 不变，只是作为 fallback）
 const initialHotSearch: HotSearchData = { sites: [{ siteName: "新浪微博", items: [{ title: "全球半导体出口限制引发供应链波动", hotness: "4.2亿", link: "", desc: "...", perspectives: [{ role: "综合视角", view: "..." }] }] }] };
 const initialDailyReview: DailyReviewData = { marketOverview: { indexValue: "3,278.45", indexChange: "+1.24%", summary: "...", volume: "8,421亿", mainFlow: "+245亿" }, stocks: [], announcements: [] };
-const initialFinanceNews: FinanceNewsData = { news: [] };
 const initialGlobalConflict: GlobalConflictData = { conflicts: [] };
 const initialFutureForecast: FutureForecastData = { period: "中期趋势预判", riskWarning: "...", themes: [], avoidSectors: { tags: [], reason: "" }, events: [], strategy: { position: "", positionDesc: "", attack: "", defense: "", view: "" } };
 
@@ -43,8 +41,6 @@ const getLocalData = (key: string, fallback: any) => {
         return normalizeModuleData('hotSearch', parsed);
       case 'dt_dailyReview':
         return normalizeModuleData('dailyReview', parsed);
-      case 'dt_financeNews':
-        return normalizeModuleData('financeNews', parsed);
       case 'dt_globalConflict':
         return normalizeModuleData('globalConflict', parsed);
       case 'dt_futureForecast':
@@ -63,7 +59,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // 💥 核心修改：优先从 LocalStorage 加载数据，拒绝默认假数据
   const [hotSearch, setHotSearch] = useState<HotSearchData>(() => getLocalData('dt_hotSearch', initialHotSearch));
   const [dailyReview, setDailyReview] = useState<DailyReviewData>(() => getLocalData('dt_dailyReview', initialDailyReview));
-  const [financeNews, setFinanceNews] = useState<FinanceNewsData>(() => getLocalData('dt_financeNews', initialFinanceNews));
   const [globalConflict, setGlobalConflict] = useState<GlobalConflictData>(() => getLocalData('dt_globalConflict', initialGlobalConflict));
   const [futureForecast, setFutureForecast] = useState<FutureForecastData>(() => getLocalData('dt_futureForecast', initialFutureForecast));
 
@@ -125,6 +120,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateData = (module: string, data: any) => {
     const normalizedData = normalizeModuleData(module, data);
+    // 公告解读仅来自用户手动上传PDF，AI生成的数据中要清空
+    if (module === 'dailyReview' && normalizedData.announcements) {
+      normalizedData.announcements = [];
+    }
     const updateTime = new Date();
     const formattedTime = `${updateTime.getFullYear()}年${updateTime.getMonth() + 1}月${updateTime.getDate()}日 ${String(updateTime.getHours()).padStart(2, '0')}:${String(updateTime.getMinutes()).padStart(2, '0')}:${String(updateTime.getSeconds()).padStart(2, '0')}`;
 
@@ -140,18 +139,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     switch (module) {
       case 'hotSearch': setHotSearch(normalizedData); break;
       case 'dailyReview': setDailyReview(normalizedData); break;
-      case 'financeNews': setFinanceNews(normalizedData); break;
       case 'globalConflict': setGlobalConflict(normalizedData); break;
       case 'futureForecast': setFutureForecast(normalizedData); break;
     }
   };
 
   const setIsRefreshing = (module: string, refreshing: boolean) => { setIsRefreshingState(prev => ({ ...prev, [module]: refreshing })); };
-  const getAllData = () => ({ hotSearch, dailyReview, financeNews, globalConflict, futureForecast });
+  const getAllData = () => ({ hotSearch, dailyReview, globalConflict, futureForecast });
 
   return (
     <DataContext.Provider value={{
-      hotSearch, dailyReview, financeNews, globalConflict, futureForecast,
+      hotSearch, dailyReview, globalConflict, futureForecast,
       updateData, isRefreshing, setIsRefreshing, getAllData, lastUpdated,
       customStocks, setCustomStocks, customSites, setCustomSites, customTopics, setCustomTopics, globalModel, setGlobalModel
     }}>

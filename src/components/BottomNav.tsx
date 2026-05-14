@@ -1,4 +1,4 @@
-import { BarChart2, TrendingUp, Newspaper, ShieldAlert, Radar } from 'lucide-react';
+import { TrendingUp, ShieldAlert, LayoutDashboard } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface BottomNavProps {
@@ -8,11 +8,9 @@ interface BottomNavProps {
 
 export function BottomNav({ activeTab, onChange }: BottomNavProps) {
   const tabs = [
-    { id: 'review', label: '复盘', icon: BarChart2 },
+    { id: 'investment', label: '投资', icon: LayoutDashboard },
     { id: 'hot', label: '热搜', icon: TrendingUp },
-    { id: 'finance', label: '财经', icon: Newspaper },
     { id: 'conflict', label: '战事', icon: ShieldAlert },
-    { id: 'forecast', label: '预判', icon: Radar },
   ];
 
   return (

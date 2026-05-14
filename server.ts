@@ -6,8 +6,7 @@ import path from 'path';
 import fs from 'fs';        // 💥 用于读取本地 index.html，解决 Cannot GET /
 import axios from 'axios';  // 💥 用于请求腾讯极速股票接口
 
-const DEFAULT_GEMINI_MODEL = 'gemini-3-flash-preview';
-const DEFAULT_OPENAI_MODEL = 'gpt-5.4-mini';
+const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 
 function getGeminiModel() {
   return process.env.GEMINI_MODEL_ID || process.env.VITE_GEMINI_MODEL_ID || DEFAULT_GEMINI_MODEL;
@@ -35,14 +34,6 @@ function getOpenAICompatibleConfig(model: string) {
       apiUrl: process.env.VITE_MIMO_BASE_URL || process.env.MIMO_BASE_URL || 'https://api.xiaomimimo.com/v1/chat/completions',
       apiKey: process.env.VITE_MIMO_API_KEY || process.env.MIMO_API_KEY || '',
       modelName: process.env.VITE_MIMO_MODEL_ID || process.env.MIMO_MODEL_ID || 'mimo-v2-pro',
-    };
-  }
-
-  if (model === 'openai') {
-    return {
-      apiUrl: process.env.OPENAI_BASE_URL || process.env.VITE_OPENAI_BASE_URL || 'https://api.openai.com/v1/chat/completions',
-      apiKey: process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || '',
-      modelName: process.env.OPENAI_MODEL_ID || process.env.VITE_OPENAI_MODEL_ID || DEFAULT_OPENAI_MODEL,
     };
   }
 
@@ -94,20 +85,42 @@ async function requestOpenAICompatibleChat(
 }
 
 function stripJsonFence(text: string) {
-  return text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  return text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 }
 
-function isGeminiSuspendedError(error: any) {
-  const message = String(error?.message || '');
-  return message.includes('CONSUMER_SUSPENDED') || message.includes('has been suspended');
+function safeJsonParse(text: string): any {
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    // Try to extract the first valid JSON object/array from the text
+    const jsonMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[0]);
+      } catch (e2) {
+        // Last resort: try to fix common issues (trailing commas, newlines in strings)
+        const fixed = jsonMatch[0]
+          .replace(/,\s*([}\]])/g, '$1')     // remove trailing commas
+          .replace(/(?<!\\)\n/g, ' ')         // replace literal newlines with spaces
+          .replace(/\r/g, '')
+          .replace(/\s{2,}/g, ' ');
+        try {
+          return JSON.parse(fixed);
+        } catch {
+          throw new Error(`Invalid JSON from model. First 200 chars: ${text.slice(0, 200)}`);
+        }
+      }
+    }
+    throw new Error(`No JSON found in model response. First 200 chars: ${text.slice(0, 200)}`);
+  }
 }
+
 
 async function getProxyDispatcher() {
-  const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.ALL_PROXY || process.env.OPENAI_PROXY_URL || process.env.VITE_OPENAI_PROXY_URL;
+  const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.ALL_PROXY;
   if (!proxyUrl) return undefined;
   try {
-    const dynamicImport = new Function('specifier', 'return import(specifier)');
-    const { ProxyAgent } = await dynamicImport('undici');
+    const { ProxyAgent } = await import('undici');
     return new ProxyAgent(proxyUrl);
   } catch (error) {
     console.warn('Proxy unavailable or invalid for OpenAI-compatible requests.');
@@ -165,7 +178,7 @@ async function fetchMarketContext(customStocks: string[] = [], moduleName: strin
 
         await Promise.all(customStocks.map(async (stockName) => {
           try {
-            const searchRes = await fetch(`https://searchapi.eastmoney.com/api/suggest/get?input=${encodeURIComponent(stockName)}&type=14&token=D43BF722C8E33BDC906FB84D85E326E8`);
+            const searchRes = await fetch(`https://searchapi.eastmoney.com/api/suggest/get?input=${encodeURIComponent(stockName)}&type=14`);
             const searchData = await searchRes.json();
             if (searchData && searchData.QuotationCodeTable && searchData.QuotationCodeTable.Data && searchData.QuotationCodeTable.Data.length > 0) {
               quoteIds.push(searchData.QuotationCodeTable.Data[0].QuoteID);
@@ -261,6 +274,89 @@ async function startServer() {
   // Health check route
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
+  });
+
+  // 💥 热搜实时数据抓取 API（后端直连平台，不依赖 AI 搜索）
+  app.post('/api/hot-search/real-time', async (req, res) => {
+    const { sites } = req.body;
+    const result: Record<string, { title: string; heat: string; url: string }[]> = {};
+    const fetchers: Promise<void>[] = [];
+
+    // B站热搜榜（热搜词，非热门视频）
+    if (!sites || sites.includes('bilibili')) {
+      fetchers.push((async () => {
+        try {
+          const resp = await fetch('https://api.bilibili.com/x/web-interface/wbi/search/square?limit=30', {
+            headers: {
+              'Referer': 'https://www.bilibili.com',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            },
+          });
+          const data: any = await resp.json();
+          if (data.code === 0 && data.data?.trending?.list) {
+            result['bilibili'] = data.data.trending.list.map((item: any) => ({
+              title: item.show_name || item.keyword || '',
+              heat: '',
+              url: `https://search.bilibili.com/all?keyword=${encodeURIComponent(item.keyword || '')}`,
+            }));
+          }
+        } catch (e) {
+          console.error('Failed to fetch bilibili hot:', e);
+        }
+      })());
+    }
+
+    // 新浪微博
+    if (!sites || sites.includes('新浪微博')) {
+      fetchers.push((async () => {
+        try {
+          const resp = await fetch('https://weibo.com/ajax/side/hotSearch', {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              'Referer': 'https://weibo.com/',
+            },
+          });
+          const data: any = await resp.json();
+          if (data.data?.realtime) {
+            result['新浪微博'] = data.data.realtime.map((item: any) => ({
+              title: item.word || item.word_scheme || '',
+              heat: item.raw_hot ? String(Math.round(item.raw_hot / 10000)) + '万' : '',
+              url: `https://s.weibo.com/weibo?q=${encodeURIComponent(item.word || '')}`,
+            }));
+          }
+        } catch (e) {
+          console.error('Failed to fetch weibo hot:', e);
+        }
+      })());
+    }
+
+    // 百度热搜（替代知乎，知乎无公开API可用）
+    if (!sites || sites.includes('知乎')) {
+      fetchers.push((async () => {
+        try {
+          const resp = await fetch('https://top.baidu.com/board?tab=realtime', {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            },
+          });
+          const html = await resp.text();
+          const words = [...html.matchAll(/"word":"([^"]+)"/g)].map(m => m[1]);
+          const hotScores = [...html.matchAll(/"hotScore":"([^"]+)"/g)].map(m => m[1]);
+          if (words.length > 0) {
+            result['知乎（百度热搜替代）'] = words.slice(0, 20).map((word: string, i: number) => ({
+              title: word,
+              heat: hotScores[i] || '',
+              url: `https://www.baidu.com/s?wd=${encodeURIComponent(word)}`,
+            }));
+          }
+        } catch (e) {
+          console.error('Failed to fetch baidu hot:', e);
+        }
+      })());
+    }
+
+    await Promise.all(fetchers);
+    res.json(result);
   });
 
   // 💥 新增：腾讯财经股票极速抓取 API
@@ -379,42 +475,50 @@ async function startServer() {
       }
 
     if (model === 'gemini') {
-        const requestedModel = model;
         const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
         if (!apiKey || apiKey.includes('TODO')) {
           return res.status(400).json({ error: 'GEMINI_API_KEY is not configured or is invalid.' });
         }
-        try {
-          const { GoogleGenAI } = await import('@google/genai');
-          const proxyUrl = process.env.GEMINI_PROXY_URL;
-          const ai = proxyUrl ? new GoogleGenAI({ apiKey, httpOptions: { baseUrl: proxyUrl } }) : new GoogleGenAI({ apiKey });
-          const response = await ai.models.generateContent({
-            model: getGeminiModel(),
-            contents: `You are a top-tier financial analyst. Provide the latest, real-world data for the module: "${moduleName}". Use the googleSearch tool to find the most up-to-date information from today. Ensure all text is in Chinese. ${extraPrompt}\n\nCRITICAL: You MUST use the following real-time market data where applicable. DO NOT invent numbers.\n\n【实时市场数据】\n${marketContext}${warPromptInjector}`,
-            config: {
-              responseMimeType: 'application/json',
-              responseSchema: schema,
-              tools: [{ googleSearch: {} }],
-              toolConfig: { includeServerSideToolInvocations: true },
-              temperature: 0.2,
-            }
-          });
-          return res.json(JSON.parse(response.text || '{}'));
-        } catch (geminiError: any) {
-          if (!isGeminiSuspendedError(geminiError)) {
-            throw geminiError;
-          }
-
-          console.warn(`Gemini suspended for generate-module, falling back to openai for ${moduleName}.`);
-          const systemPrompt = `You are a top-tier financial analyst. Provide the latest data for the module: "${moduleName}". Ensure all text is in Chinese. ${extraPrompt}\n\n【实时市场数据】\n${marketContext}${warPromptInjector}\n\nCRITICAL: You MUST return ONLY a valid JSON object matching the schema below. No markdown text.\n\nSchema:\n${JSON.stringify(schema)}`;
-          const fallbackText = await requestOpenAICompatibleChat('openai', [{ role: 'system', content: systemPrompt }], 0.2);
-          const parsedFallback = JSON.parse(stripJsonFence(fallbackText) || '{}');
-          return res.json({ ...parsedFallback, _meta: { fallbackFrom: requestedModel, actualModel: 'openai' } });
+        const proxyUrl = process.env.GEMINI_PROXY_URL;
+        const baseUrl = (proxyUrl || 'https://generativelanguage.googleapis.com').replace(/\/+$/, '');
+        const modelName = getGeminiModel();
+        // 💡 v1beta required for gemini-2.5 structured output + googleSearch
+        const apiVersion = 'v1beta';
+        const contentsText = `You are a top-tier financial analyst. Provide the latest, real-world data for the module: "${moduleName}". Use the googleSearch tool to find the most up-to-date information from today. Ensure all text is in Chinese. ${extraPrompt}\n\nCRITICAL: You MUST use the following real-time market data where applicable. DO NOT invent numbers.\n\n【实时市场数据】\n${marketContext}${warPromptInjector}\n\n【IMPORTANT】You MUST return ONLY a valid JSON object. No markdown, no code fences, no extra text. Use this schema:\n${JSON.stringify(schema)}`;
+        const requestBody: any = {
+          contents: [{ parts: [{ text: contentsText }] }],
+          generationConfig: { temperature: 0.2 },
+          tools: [{ googleSearch: {} }],
+        };
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        let url: string;
+        if (proxyUrl) {
+          url = `${baseUrl}/${apiVersion}/models/${modelName}:generateContent`;
+          headers['x-goog-api-key'] = apiKey;
+        } else {
+          url = `${baseUrl}/${apiVersion}/models/${modelName}:generateContent?key=${apiKey}`;
         }
+        const geminiRes = await fetch(url, { method: 'POST', headers, body: JSON.stringify(requestBody) });
+        if (!geminiRes.ok) {
+          const errText = await geminiRes.text();
+          const errJson = JSON.parse(errText);
+          if (errJson?.error?.details?.some((d: any) => d.reason === 'CONSUMER_SUSPENDED')) {
+            throw Object.assign(new Error('Gemini suspended'), { code: 'CONSUMER_SUSPENDED', response: { body: errText } });
+          }
+          throw new Error(`Gemini API returned ${geminiRes.status}: ${errText.slice(0, 500)}`);
+        }
+        const geminiData = await geminiRes.json();
+        const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        return res.json(safeJsonParse(stripJsonFence(rawText)));
       }
 
       // Other models
       const systemPrompt = `You are a top-tier financial analyst. Provide the latest data for the module: "${moduleName}". Ensure all text is in Chinese. ${extraPrompt}\n\n【实时市场数据】\n${marketContext}${warPromptInjector}\n\nCRITICAL: You MUST return ONLY a valid JSON object matching the schema below. No markdown text.\n\nSchema:\n${JSON.stringify(schema)}`;
+
+      const gmConfig = getOpenAICompatibleConfig(model);
+      if (!gmConfig.apiKey) {
+        return res.status(400).json({ error: `API Key for ${model} is not configured.` });
+      }
 
       let text = await requestOpenAICompatibleChat(model, [{ role: 'system', content: systemPrompt }], 0.2);
       text = stripJsonFence(text);
@@ -433,23 +537,33 @@ async function startServer() {
       if (model === 'gemini') {
         const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
         if (!apiKey || apiKey.includes('TODO')) return res.status(400).json({ error: 'GEMINI_API_KEY is invalid.' });
-        const { GoogleGenAI } = await import('@google/genai');
-        const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-          model: getGeminiModel(),
-          contents: {
-            parts: [
-              { inlineData: { data: base64Data, mimeType: mimeType } },
-              { text: '你是一个资深的金融分析师。请阅读这份公告，总结归纳核心内容，给出观点并明确结论：是利好、利空还是中性。请返回 JSON 格式结果。' },
-            ],
-          },
-          config: {
-            responseMimeType: 'application/json',
-            responseSchema: schema,
-            temperature: 0.2,
-          }
-        });
-        return res.json(JSON.parse(response.text || '{}'));
+        const proxyUrl = process.env.GEMINI_PROXY_URL;
+        const baseUrl = (proxyUrl || 'https://generativelanguage.googleapis.com').replace(/\/+$/, '');
+        const modelName = getGeminiModel();
+        const apiVersion = 'v1beta';
+        const requestBody: any = {
+          contents: [{ parts: [
+            { inlineData: { data: base64Data, mimeType } },
+            { text: '你是一个资深的金融分析师。请阅读这份公告，总结归纳核心内容，给出观点并明确结论：是利好、利空还是中性。请返回 JSON 格式结果。' },
+          ] }],
+          generationConfig: { responseMimeType: 'application/json', responseSchema: schema, temperature: 0.2 },
+        };
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        let url: string;
+        if (proxyUrl) {
+          url = `${baseUrl}/${apiVersion}/models/${modelName}:generateContent`;
+          headers['x-goog-api-key'] = apiKey;
+        } else {
+          url = `${baseUrl}/${apiVersion}/models/${modelName}:generateContent?key=${apiKey}`;
+        }
+        const geminiRes = await fetch(url, { method: 'POST', headers, body: JSON.stringify(requestBody) });
+        if (!geminiRes.ok) {
+          const errText = await geminiRes.text();
+          throw new Error(`Gemini API returned ${geminiRes.status}: ${errText.slice(0, 500)}`);
+        }
+        const geminiData = await geminiRes.json();
+        const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        return res.json(safeJsonParse(stripJsonFence(rawText)));
       }
 
       return res.status(400).json({ error: `Model ${model} does not support PDF analysis yet.` });
@@ -467,36 +581,38 @@ async function startServer() {
 
       if (model === 'gemini') {
         const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-        try {
-          const { GoogleGenAI } = await import('@google/genai');
-          const proxyUrl = process.env.GEMINI_PROXY_URL;
-          const ai = proxyUrl ? new GoogleGenAI({ apiKey, httpOptions: { baseUrl: proxyUrl } }) : new GoogleGenAI({ apiKey });
-          const contents = [
-            { role: 'user', parts: [{ text: systemPrompt }] },
-            { role: 'model', parts: [{ text: '好的，我已经了解了最新的市场数据。请问有什么可以帮您？' }] },
-            ...history.map((h: any) => ({ role: h.role, parts: [{ text: h.text }] })),
-            { role: 'user', parts: [{ text: message }] }
-          ];
-          const response = await ai.models.generateContent({
-            model: getGeminiModel(),
-            contents: contents as any,
-          });
-          return res.json({ text: response.text });
-        } catch (geminiError: any) {
-          if (!isGeminiSuspendedError(geminiError)) {
-            throw geminiError;
-          }
-
-          console.warn('Gemini suspended for chat, falling back to openai.');
-          const openAiMessages = [
-            { role: 'system', content: systemPrompt },
-            { role: 'assistant', content: '好的，我已经了解了最新数据。请问有什么可以帮您？' },
-            ...history.map((h: any) => ({ role: h.role === 'model' ? 'assistant' : 'user', content: h.text })),
-            { role: 'user', content: message }
-          ];
-          const fallbackText = await requestOpenAICompatibleChat('openai', openAiMessages, 0.7);
-          return res.json({ text: fallbackText, _meta: { fallbackFrom: 'gemini', actualModel: 'openai' } });
+        if (!apiKey || apiKey.includes('TODO')) {
+          return res.status(400).json({ error: 'GEMINI_API_KEY is not configured or is invalid.' });
         }
+        const proxyUrl = process.env.GEMINI_PROXY_URL;
+        const baseUrl = (proxyUrl || 'https://generativelanguage.googleapis.com').replace(/\/+$/, '');
+        const modelName = getGeminiModel();
+        const apiVersion = 'v1beta';
+        const contents = [
+          { role: 'user', parts: [{ text: systemPrompt }] },
+          { role: 'model', parts: [{ text: '好的，我已经了解了最新的市场数据。请问有什么可以帮您？' }] },
+          ...history.map((h: any) => ({ role: h.role === 'user' ? 'user' : 'model', parts: [{ text: h.text }] })),
+          { role: 'user', parts: [{ text: message }] }
+        ];
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        let url: string;
+        if (proxyUrl) {
+          url = `${baseUrl}/${apiVersion}/models/${modelName}:generateContent`;
+          headers['x-goog-api-key'] = apiKey;
+        } else {
+          url = `${baseUrl}/${apiVersion}/models/${modelName}:generateContent?key=${apiKey}`;
+        }
+        const geminiRes = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ contents }) });
+        if (!geminiRes.ok) {
+          const errText = await geminiRes.text();
+          const errJson = JSON.parse(errText);
+          if (errJson?.error?.details?.some((d: any) => d.reason === 'CONSUMER_SUSPENDED')) {
+            throw Object.assign(new Error('Gemini suspended'), { code: 'CONSUMER_SUSPENDED', response: { body: errText } });
+          }
+          throw new Error(`Gemini API returned ${geminiRes.status}: ${errText.slice(0, 500)}`);
+        }
+        const geminiData = await geminiRes.json();
+        return res.json({ text: geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '' });
       }
 
       // Other Models
@@ -506,6 +622,11 @@ async function startServer() {
         ...history.map((h: any) => ({ role: h.role === 'model' ? 'assistant' : 'user', content: h.text })),
         { role: 'user', content: message }
       ];
+
+      const chatConfig = getOpenAICompatibleConfig(model);
+      if (!chatConfig.apiKey) {
+        return res.status(400).json({ error: `API Key for ${model} is not configured.` });
+      }
 
       const text = await requestOpenAICompatibleChat(model, openAiMessages, 0.7);
       return res.json({ text });

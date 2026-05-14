@@ -81,8 +81,11 @@ export function GlobalConflict() {
               </div>
             </div>
 
-            <div className="flex justify-end">
-              <span className="text-[9px] text-on-primary-container/60 italic font-mono">Source: {conflict.source}</span>
+            <div className="flex justify-end items-center gap-2 pt-2 border-t border-white/5">
+              <span className="text-[9px] text-on-primary-container/50 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary/40"></span>
+                来源: <span className="font-medium text-on-primary-container/80">{conflict.source || '综合网络资讯'}</span>
+              </span>
             </div>
           </div>
         </section>

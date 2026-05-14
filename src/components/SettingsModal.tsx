@@ -14,8 +14,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   if (!isOpen) return null;
 
   const models = [
-    { id: 'gemini', name: 'Gemini 3 Flash' },
-    { id: 'openai', name: 'GPT-5.4 Mini' },
+    { id: 'gemini', name: 'Gemini 2.5 Flash' },
     { id: 'deepseek', name: 'DeepSeek' },
     { id: 'doubao', name: '豆包 (Doubao)' },
     { id: 'mimo', name: '小米 MiMo' }
